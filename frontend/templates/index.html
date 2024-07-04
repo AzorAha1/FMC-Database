@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    {% if title %}
+        <title>FMC | {{ title }}</title>
+    {% else %}
+        <title>FMC</title>
+    {% endif %}
 </head>
 <body>
-    
+    <h1>first page</h1>
 </body>
 </html>
