@@ -2,7 +2,7 @@
 from flask import Flask, render_template, request, redirect
 from flask_pymongo import PyMongo
 
-app = Flask(__name__, template_folder='../frontend/templates')
+app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/statics')
 # mongo = PyMongo(app=app)
 
 @app.route('/', methods=['GET'])
