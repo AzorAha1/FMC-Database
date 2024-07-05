@@ -1,21 +1,24 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const sidebar = document.getElementById('sidebar');
-    const openBtn = document.getElementById('open-btn');
-    const closeBtn = document.getElementById('close-btn');
-    const animatedContainers = document.querySelectorAll('.animated-container');
-
-    openBtn.addEventListener('click', () => {
-        sidebar.style.left = '0';
-    });
-
-    closeBtn.addEventListener('click', () => {
-        sidebar.style.left = '-250px';
-    });
-
-    // Add the 'show' class to start the animation for containers
-    animatedContainers.forEach(container => {
-        setTimeout(() => {
-            container.classList.add('show');
-        }, 100);
-    });
+document.addEventListener("DOMContentLoaded", function() {
+    setTimeout(function() {
+        var preloader = document.getElementById('preloader');
+        preloader.style.display = 'none';
+        
+        var content = document.getElementById('content');
+        content.style.display = 'block';
+        
+        document.body.style.overflow = 'auto';
+    }, 3000); // Simulate a delay of 3 seconds
 });
+function validatePassword() {
+    const password = document.getElementById('password').value;
+    const passwordHelp = document.getElementById('passwordHelp');
+    const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+
+    if (!regex.test(password)) {
+        passwordHelp.style.color = 'red';
+        return false;
+    }
+
+    passwordHelp.style.color = 'green';
+    return true;
+}

@@ -6,9 +6,10 @@ app = Flask(__name__, template_folder='../frontend/templates', static_folder='..
 # mongo = PyMongo(app=app)
 
 @app.route('/', methods=['GET'])
+@app.route('/login', methods=['GET', 'POST'])
 def index():
     """index file"""
-    return render_template('index.html', title='Home')
+    return render_template('login.html', title='Home')
 
 
 if __name__ == '__main__':
