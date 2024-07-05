@@ -8,18 +8,19 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #333;
+    background-color: black;
     color: white;
     padding: 10px 20px;
     position: fixed;
-    width: 100%;
+    width: 99%;
     top: 0;
     z-index: 1001;
 }
 
-.header-icons i {
+.header-icons ul li {
     margin-right: 15px;
     cursor: pointer;
+    display: inline-block;
 }
 
 .header .open-btn {
@@ -28,6 +29,7 @@ body {
     border: none;
     color: white;
     cursor: pointer;
+    margin-right: 20px;
 }
 
 .container {
@@ -39,7 +41,7 @@ body {
     height: 100vh;
     width: 250px;
     position: fixed;
-    top: 50px; /* Adjusted for header */
+    top: 50px;
     left: -250px;
     background-color: #333;
     color: white;
@@ -84,15 +86,40 @@ body {
     margin-left: 20px;
     padding: 20px;
     flex-grow: 1;
-    margin-top: 50px; /* Adjusted for header */
+    margin-top: 50px;
 }
 
-.open-btn {
-    font-size: 24px;
-    background: none;
-    border: none;
-    cursor: pointer;
+.animated-container {
+    width: 25%;
+    height: 200;
+    border-radius: 15px;
+    background-color: #333;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.5s ease, transform 0.5s ease;
     margin-bottom: 20px;
+    display: inline-block;
+    padding: 20px;
+}
+
+.animated-container.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
 }
 
 /* Responsive Design */
@@ -124,5 +151,9 @@ body {
 
     .content {
         margin-left: 0;
+    }
+
+    .animated-container {
+        width: 90%;
     }
 }
