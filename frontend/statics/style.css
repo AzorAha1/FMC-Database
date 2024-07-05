@@ -1,8 +1,128 @@
-*{
+body {
     margin: 0;
-    padding: 0;
-    font-family: 'Times New Roman', Times, serif;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
 }
-body{
-    background-color: red;
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #333;
+    color: white;
+    padding: 10px 20px;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1001;
+}
+
+.header-icons i {
+    margin-right: 15px;
+    cursor: pointer;
+}
+
+.header .open-btn {
+    font-size: 24px;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+.container {
+    display: flex;
+    margin-top: 50px;
+}
+
+.sidebar {
+    height: 100vh;
+    width: 250px;
+    position: fixed;
+    top: 50px; /* Adjusted for header */
+    left: -250px;
+    background-color: #333;
+    color: white;
+    transition: left 0.3s ease;
+    z-index: 1000;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li {
+    padding: 15px;
+    text-align: center;
+}
+
+.sidebar ul li a {
+    color: white;
+    text-decoration: none;
+    display: block;
+    font-size: 18px;
+}
+
+.sidebar ul li a:hover {
+    background-color: #575757;
+}
+
+.sidebar .close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 30px;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+.content {
+    margin-left: 20px;
+    padding: 20px;
+    flex-grow: 1;
+    margin-top: 50px; /* Adjusted for header */
+}
+
+.open-btn {
+    font-size: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .sidebar {
+        width: 200px;
+        left: -200px;
+    }
+
+    .sidebar ul li {
+        padding: 10px;
+    }
+
+    .sidebar ul li a {
+        font-size: 16px;
+    }
+
+    .open-btn {
+        font-size: 24px;
+    }
+
+    .header-icons i {
+        margin-right: 10px;
+    }
+
+    .header .open-btn {
+        font-size: 24px;
+    }
+
+    .content {
+        margin-left: 0;
+    }
 }
