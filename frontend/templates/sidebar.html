@@ -1,0 +1,62 @@
+
+<nav id="sidebar">
+    <ul class="list-unstyled components">
+      <li>
+        <i class="fas fa-tachometer-alt"></i><a href="{{ url_for('dashboard') }}">Dashboard</a>
+    </li>
+        <li>
+          
+          <i class="fa fa-users"></i><a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Manage Staffs</a>
+            <ul class="collapse list-unstyled" id="homeSubmenu">
+                <li>
+                  <i class="fa fa-plus"></i><a href="{{ url_for('staff') }}">Add staff</a>
+                </li>
+                <li>
+                  <i class="fa fa-list"></i> <a href="{{ url_for('table_list') }}">List of Staff</a>
+                </li>
+
+            </ul>
+        </li>
+        <li>
+          
+          <i class="fa fa-users"></i><a href="#homeubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Manage LCM</a>
+            <ul class="collapse list-unstyled" id="homeubmenu">
+                <li>
+                  <i class="fa fa-plus"></i><a href="{{ url_for('add_lcm') }}">Add LCM Staff</a>
+                </li>
+                <li>
+                  <i class="fa fa-list"></i> <a href="{{ url_for('list_Lcm') }}">List of LCM Staff</a>
+                </li>
+
+            </ul>
+        </li>
+        <li>
+          <i class="fa fa-list"></i><a href="{{ url_for('confirmation') }}">Confirmation</a>
+        </li>
+        <li>
+          <i class="fa fa-list"></i><a href="{{ url_for('appointment') }}">Appointment</a>
+        </li>
+        <li>
+          <i class="fa fa-list"></i><a href="{{ url_for('promotion') }}">Promotion</a>
+        </li>
+        
+        <li>
+          <i class="fa fa-users"></i><a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Manage Users</a>
+            <ul class="collapse list-unstyled" id="pageSubmenu">
+                <li>
+                    <a href="#">Add user</a>
+                </li>
+                <li>
+                    <a href="#">Delete User</a>
+                </li>
+                <li>
+                    <a href="#">Users List</a>
+                </li>
+            </ul>
+            
+        </li>
+        <li>
+          <i class="fa fa-sign-out-alt"></i><a href="{{ url_for('login') }}">Logout</a>
+        </li>
+    </ul>
+</nav>

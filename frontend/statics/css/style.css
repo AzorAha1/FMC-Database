@@ -25,7 +25,7 @@ body {
 
 .image-container {
     flex: 1;
-    background: url('../statics/img/2.jpg') no-repeat center center/cover;
+    background: url('../img/2.jpg') no-repeat center center/cover;
     display: none;
     filter: blur(0.2px); /* Apply blur to the image */
 }

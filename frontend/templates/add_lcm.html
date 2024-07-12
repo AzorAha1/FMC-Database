@@ -9,41 +9,41 @@
     <link rel="stylesheet" href="../statics/css/dashboard.css">
    
 </head>
-<body>    
-  {% include 'header.html' %} 
+<body> 
+    {% include 'header.html' %} 
     <div class="wrapper">
-      {% include 'sidebar.html' %} 
+        {% include 'sidebar.html' %} 
         <div id="content">
             <br>
-           <a href="{{ url_for('dashboard') }}">
+           <a href="{{ url_for('staff') }}">
             <h3>
-              <i class="fas fa-home"></i> Dashboard
+              <i class="fas fa-plus"></i> {{title}}
             </h3>
             </a> 
             <div class="container-box">
-                 <div class="container-block ">
-                    <h4>All Staff</h4>
-                    <p><b>NO:</b><p><i>7666</i> </p></p>
-                 </div>
-                 <div class="container-block bg-black">
-                    <h4>Total IPPIS</h4>
-                    <p><b>NO:</b><p><i>7666</i> </p></p>
-                 </div>
-                 <div class="container-block">
-                    <h4>Total LCM</h4>
-                    <p><b>NO:</b><p><i>7666</i> </p></p>
-                 </div>
-                 <div class="container-block bg-black">
-                    <h4>Total User</h4>
-                    <p><b>NO:</b><p><i>7666</i> </p></p>
-                 </div>
-                 
+               
+<div class="form-container"> 
+    <form>
+        <div class="form-group"> 
+            <input type="text" class="form-control small" id="staffName" placeholder="Enter First Name">
+            <input type="text" class="form-control small" id="staffName" placeholder="Enter Middle Name">
+            <input type="text" class="form-control small" id="staffName" placeholder="Enter Last Name">
+        </div>
+        <div class="form-group">
+            <input type="tel" class="form-control small" id="staffPhone" placeholder="Enter phone number">
+            <input type="email" class="form-control small" id="staffEmail" placeholder="Enter email">
+            <input type="email" class="form-control small" id="staffEmail" placeholder="Enter email">
+        </div> 
+        <div class="form-group">            
+            <input type="text" class="form-control small" id="staffRole" placeholder="Enter role">
+            <input type="text" class="form-control small" id="staffRole" placeholder="Enter role">
+            <input type="text" class="form-control small" id="staffRole" placeholder="Enter role">
+        </div>
+        <button type="submit" class="btn btn-secondary float"> <i class="fa fa-plus"></i> Add Staff</button>
+    </form>
+</div> 
+
             </div>
-            <div class="container-box">
-              <img src="../statics/img/3.jpg" width="1000" height="500" style="border-radius: 50px;" alt="website Logo">
-            </div>
-            <br>
-            <br>
         </div>
 
     </div>

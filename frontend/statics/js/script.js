@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function() {
         content.style.display = 'block';
         
         document.body.style.overflow = 'auto';
-    }, 3000); // Simulate a delay of 3 seconds
+    }, 3000);  
 });
 function validatePassword() {
     const password = document.getElementById('password').value;
@@ -22,3 +22,4 @@ function validatePassword() {
     passwordHelp.style.color = 'green';
     return true;
 }
+

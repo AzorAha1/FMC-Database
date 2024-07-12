@@ -1,0 +1,238 @@
+*{
+    font-family: 'Times New Roman', Times, serif;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #f8f9fa;
+    }
+   
+    #sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    transition: all 0.3s;
+    position: fixed;
+    top: 56px;
+    bottom: 0;
+    overflow-y: auto;
+    z-index: 999;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    }
+    #sidebar i{
+        margin: 10px;
+    }
+    #sidebar .list-unstyled {
+    padding: 0;
+    margin-top: 30px;
+    }
+    
+    #sidebar .list-unstyled li {
+    padding: 10px;
+    transition: background-color 0.3s;
+    }
+    
+    #sidebar .list-unstyled li a {
+    color: white;
+    text-decoration: none;
+    }
+    
+    #sidebar .list-unstyled li:hover {
+    background-color: rgba(0, 0, 0, 0.9);
+    }
+    
+    #content {
+    width: 100%;
+    padding: 20px;
+    margin-left: 250px;
+    margin-top: 56px;
+    overflow-y: auto;
+    height: calc(100vh - 56px);
+    transition: margin-left 0.3s; 
+    }
+    
+    #content a{
+    text-decoration: none;
+    color: black;
+    }
+
+    #header {
+    background: black;
+    color: white;
+    padding: 10px;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    #header .icons {
+    display: flex;
+    align-items: center;
+    }
+    
+    #header .icons .icon {
+    margin-left: 30px;
+    cursor: pointer;
+    transition: transform 0.3s;
+    font-size: large;
+    }
+    
+    #header .icons .icon:hover {
+    transform: scale(1.1);
+    }
+    
+    #header .icons .user-icon {
+    margin-left: auto;
+    }
+    
+    #header .icons .user-icon .dropdown-toggle {
+    padding: 5px;
+    }
+    
+    #header .icons .search-icon {
+    margin-right: 10px;
+    }
+    
+    #header .icons .chat-icon {
+    margin-right: 10px;
+    }
+    
+    .form-group .small{
+        width: 30%; 
+        display: inline-block;
+        margin: 10px;
+    }
+.form-group .float{
+    float: right;
+    margin: 30px;
+}
+    #footer {
+    background: black;
+    color: white;
+    text-align: center;
+    padding: 0;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    margin-top: -10px;
+    
+    }
+    
+    .wrapper {
+    display: flex;
+    }
+    
+    .wrapper.toggled #sidebar {
+    margin-left: -250px;
+    }
+    
+    .wrapper.toggled #content {
+    margin-left: 0;
+    }
+    
+    .container-box {
+    background-color: white;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); 
+    display: inline-flex;
+    width: 100%;
+    }
+    .container-block{
+    background-color: white;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    width: 25%; 
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    margin: 10px;
+    }
+    .container-block i{
+    float: right;
+    font-size: x-large;
+    }
+
+    .bg-black{
+      background-color: rgba(0, 0, 0, 0.9);
+      color: white;
+    }
+    
+    .container-block:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    @media (max-width: 768px) {
+    #sidebar {
+    margin-left: -250px;
+    margin-top: -10px;
+    }
+
+    
+    .wrapper.toggled #sidebar {
+    margin-left: 0;
+    }
+    
+    .wrapper.toggled #content {
+    margin-left: 250px;
+    }
+    #header h2{
+        display: none;
+    }
+    }
+    #preloader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.3s ease;
+      }
+    
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 10px solid rgba(0, 0, 0, 0.1);
+        border-top-color: #000000;
+        animation: spin 1s infinite linear;
+      }
+    
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+.form-container {
+    background-color: white;
+    border-radius: 5px;
+    padding: 20px;
+    margin-bottom: 20px; 
+    width: 100%;
+}
+
+.form-container input:hover { 
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); 
+}
