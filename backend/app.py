@@ -9,7 +9,7 @@ app = Flask(__name__, template_folder='../frontend/templates', static_folder='..
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """index file"""
-    return render_template('login.html', title='Home')
+    return render_template('login.html', title='Login ')
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
