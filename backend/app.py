@@ -25,20 +25,15 @@ def dashboard():
 @app.route('/add staff', methods=['GET', 'POST'])
 def staff():
     """Add Staff"""
-    return render_template('add_staff.html', title='Add Nominal')
+    return render_template('add_staff.html', title='Add Permanent and Pensionable')
 @app.route('/List of staff', methods=['GET', 'POST'])
 def table_list():
     """List of Staff"""
-    return render_template('list.html', title='List of Nominal')
+    return render_template('list.html', title='List of Permanent and Pensionable')
 @app.route('/Confirmation', methods=['GET', 'POST'])
 def confirmation():
     """Confirmation"""
     return render_template('confirmation.html', title='Confirmation')
-
-@app.route('/appointment', methods=['GET', 'POST'])
-def appointment():
-    """appointment"""
-    return render_template('appointment.html', title='Appointment')
 
 @app.route('/Promotion', methods=['GET', 'POST'])
 def promotion():
@@ -48,12 +43,12 @@ def promotion():
 @app.route('/Add LCM Staff', methods=['GET', 'POST'])
 def add_lcm():
     """Add_lcm"""
-    return render_template('add_lcm.html', title='Add Non-Nominal')
+    return render_template('add_lcm.html', title='Add Locum Staffs')
 
 @app.route('/List of LCM Staff', methods=['GET', 'POST'])
 def list_Lcm():
     """List_Lcm"""
-    return render_template('list_lcm.html', title='List of Non-Nominal')
+    return render_template('list_lcm.html', title='List of Locum Staffs')
 
 @app.route('/Add User', methods=['GET', 'POST'])
 def user():
