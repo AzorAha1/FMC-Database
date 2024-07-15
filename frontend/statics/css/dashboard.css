@@ -108,13 +108,34 @@ body {
     }
     
     .form-group .small{
-        width: 30%; 
+        width: 30.4%; 
         display: inline-block;
         margin: 10px;
     }
+    .form-group .one{
+      width: 96%; 
+      display: inline-block;
+      margin: 10px;
+  }
+    .form-group .smaller{
+      width: 21.9%; 
+      display: inline-block;
+      margin: 10px;
+  }
+  .form-group .middle{
+    width: 46.4%; 
+    display: inline-block;
+    margin: 10px;
+}
 .form-group .float{
     float: right;
     margin: 30px;
+}
+.form-group span{
+  position: absolute; 
+  margin-top: -20px;
+  margin-left: 20px;
+  color: black;
 }
     #footer {
     background: black;

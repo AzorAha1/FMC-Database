@@ -6,7 +6,7 @@
     </li>
         <li>
           
-          <i class="fa fa-users"></i><a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Manage Staffs</a>
+          <i class="fa fa-users"></i><a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Manage Nominal</a>
             <ul class="collapse list-unstyled" id="homeSubmenu">
                 <li>
                   <i class="fa fa-plus"></i><a href="{{ url_for('staff') }}">Add staff</a>
@@ -19,7 +19,7 @@
         </li>
         <li>
           
-          <i class="fa fa-users"></i><a href="#homeubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Manage LCM</a>
+          <i class="fa fa-users"></i><a href="#homeubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Manage Non-Nominal</a>
             <ul class="collapse list-unstyled" id="homeubmenu">
                 <li>
                   <i class="fa fa-plus"></i><a href="{{ url_for('add_lcm') }}">Add LCM Staff</a>
@@ -44,13 +44,10 @@
           <i class="fa fa-users"></i><a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Manage Users</a>
             <ul class="collapse list-unstyled" id="pageSubmenu">
                 <li>
-                    <a href="#">Add user</a>
+                  <i class="fa fa-plus"></i>  <a href="{{ url_for('user') }}">Add user</a>
                 </li>
                 <li>
-                    <a href="#">Delete User</a>
-                </li>
-                <li>
-                    <a href="#">Users List</a>
+                  <i class="fa fa-list"></i>  <a href="{{ url_for('table') }}">User_Table</a>
                 </li>
             </ul>
             

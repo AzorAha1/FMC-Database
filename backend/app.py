@@ -19,11 +19,11 @@ def dashboard():
 @app.route('/add staff', methods=['GET', 'POST'])
 def staff():
     """Add Staff"""
-    return render_template('add_staff.html', title='Add Staff')
+    return render_template('add_staff.html', title='Add Nominal')
 @app.route('/List of staff', methods=['GET', 'POST'])
 def table_list():
     """List of Staff"""
-    return render_template('list.html', title='List of Staff')
+    return render_template('list.html', title='List of Nominal')
 @app.route('/Confirmation', methods=['GET', 'POST'])
 def confirmation():
     """Confirmation"""
@@ -42,12 +42,22 @@ def promotion():
 @app.route('/Add LCM Staff', methods=['GET', 'POST'])
 def add_lcm():
     """Add_lcm"""
-    return render_template('add_lcm.html', title='Add_lcm')
+    return render_template('add_lcm.html', title='Add Non-Nominal')
 
 @app.route('/List of LCM Staff', methods=['GET', 'POST'])
 def list_Lcm():
     """List_Lcm"""
-    return render_template('list_lcm.html', title='List_Lcm')
+    return render_template('list_lcm.html', title='List of Non-Nominal')
+
+@app.route('/Add User', methods=['GET', 'POST'])
+def user():
+    """user"""
+    return render_template('add_user.html', title='Add User')
+
+@app.route('/User table', methods=['GET', 'POST'])
+def table():
+    """user"""
+    return render_template('user_table.html', title='User table')
 
 
 if __name__ == '__main__':
