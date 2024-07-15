@@ -3,12 +3,18 @@ from flask import Flask, render_template, request, redirect, url_for
 from flask_pymongo import PyMongo
 
 app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/statics')
-# mongo = PyMongo(app=app)
+app.secret_key = 'secretkeyforfmcdatabase'
+app.config['MONGO_URI'] = 'mongodb://localhost:27017/fmc-database'
+mongo = PyMongo(app)
 
 @app.route('/', methods=['GET'])
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """index file"""
+    username = request.form.get('username')
+    password = request.form.get('password')
+    if username == 'admin' and password == '@admin11':
+        return redirect(url_for('dashboard'))
     return render_template('login.html', title='Login ')
 
 @app.route('/dashboard', methods=['GET', 'POST'])
