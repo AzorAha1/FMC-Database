@@ -7,7 +7,6 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" rel="stylesheet">
     <link rel="stylesheet" href="../statics/css/dashboard.css">
-   
 </head>
 <body>
     {% include 'header.html' %} 
@@ -15,10 +14,10 @@
         {% include 'sidebar.html' %} 
         <div id="content">
             <br>
-           <a href="{{ url_for('table_list') }}">
-            <h3>
-              <i class="fas fa-list"></i> {{title}}
-            </h3>
+            <a href="{{ url_for('table_list') }}">
+                <h3>
+                    <i class="fas fa-list"></i> {{title}}
+                </h3>
             </a> 
             <div class="container-box">
                 <div class="container mt-4">
@@ -39,32 +38,29 @@
                             </tr>
                         </thead>
                         <tbody id="staffTable"> 
-                             <tr>
-                                <td>1</td>                                
-                                <td>173421</td>
-                                <td>Aliyu Abubakar</td>
-                                <td>24/02/2002</td> 
-                                <td>It Unit</td>
-                                <td>24/02/2024</td>  
+                            {% for staff_member in staff %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ staff_member.fileNumber }}</td>
+                                <td>{{ staff_member.firstName }} {{ staff_member.midName }} {{ staff_member.lastName }}</td>
+                                <td>{{ staff_member.dob }}</td>
+                                <td>{{ staff_member.department }}</td>
+                                <td>{{ staff_member.dateOfApt }}</td>
                                 <td>
                                     <button class="btn btn-info btn-sm"><i class="fas fa-eye"></i></button>
                                     <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></button>
                                     <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
                                 </td>
                             </tr> 
+                            {% endfor %}
                         </tbody>
                     </table>
                     <nav>
                         <ul class="pagination justify-content-center" id="pagination">
-                             
                         </ul>
                     </nav>
                 </div>
             </div>
-        </div>
-
-    </div>
-
         </div>
     </div>
     {% include 'footer.html' %} 
@@ -78,8 +74,6 @@
             });
         });
     </script>
-    <script src="../statics/js/datble.js">
-      
-    </script>
+    <script src="../statics/js/datble.js"></script>
 </body>
 </html>

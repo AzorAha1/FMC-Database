@@ -3,60 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FMC BKD | {{ title }} </title>
+    <title>FMC BKD | {{ title }}</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" rel="stylesheet">
     <link rel="stylesheet" href="../statics/css/dashboard.css">
-   
 </head>
-<body> 
-    {% include 'header.html' %} 
+<body>
+    {% include 'header.html' %}
     <div class="wrapper">
-        {% include 'sidebar.html' %} 
+        {% include 'sidebar.html' %}
         <div id="content">
             <br>
-           <a href="{{ url_for('staff') }}">
-            <h3>
-              <i class="fas fa-plus"></i> {{title}}
-            </h3>
-            </a> 
+            <a href="{{ url_for('staff') }}">
+                <h3><i class="fas fa-plus"></i> {{ title }}</h3>
+            </a>
             <div class="container-box">
-               
-<div class="form-container"> 
-    <form>
-        <div class="form-group"> 
-            <span >First Name:</span>
-            <input type="text" class="form-control smaller" id="staffName" placeholder="Enter First Name">
-            <span>Middle Name:</span>
-            <input type="text" class="form-control smaller" id="staffName" placeholder="Enter Middle Name">
-            <span>Last Name:</span>
-            <input type="text" class="form-control smaller" id="staffName" placeholder="Enter Last Name">
-            <span>Date of Birth</span>
-            <input type="date" class="form-control smaller" id="staffdob" >
-        </div>
-        <div class="form-group">
-            <span>File Number</span>
-            <input type="text" class="form-control small" id="staffPhone" placeholder="Enter File Number">
-            <span>Department</span>
-            <input type="text" class="form-control small" id="staffDepartment" placeholder="Enter Department">
-            <span>Date of First Appointment</span>
-            <input type="text" class="form-control small" id="staffDofa" placeholder="Enter email">
-        </div> 
-        <div class="form-group">    
-            <span>State of Origin</span>        
-            <input type="text" class="form-control middle" id="staffRole" placeholder="Enter State of Origin">
-            <span>Local Government of Origin</span>
-            <input type="text" class="form-control middle" id="staffRole" placeholder="Enter Local Government of Origin">
-        </div>
-        <button type="submit" class="btn btn-secondary float"> <i class="fa fa-plus"></i> Add Staff</button>
-    </form>
-</div> 
-
+                <div class="form-container">
+                    <form method="post" action="{{ url_for('add_lcm') }}">
+                        <div class="form-group">
+                            <input type="text" class="form-control smaller" placeholder="Enter First Name" name="stafffirstName" required>
+                            <input type="text" class="form-control smaller" placeholder="Enter Middle Name" name="staffmidName" required>
+                            <input type="text" class="form-control smaller" placeholder="Enter Last Name" name="stafflastName" required>
+                            
+                            <!-- <input type="date" placeholder="Date of Birth" class="form-control smaller" name="staffdob" onfocus="this.placeholder='date'" onblur="this.placeholder='Date of Birth'"> -->
+                            <input placeholder="Date of Birth" class="form-control smaller" type="text" name="staffdob" onfocus="(this.type='date')" onblur="(this.type='text')" id="date"/>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control middle" placeholder="Phone Number" name="staffpno" required>
+                            <input type="text" class="form-control small" placeholder="Enter File Number" name="filenumber" required>
+                            <input type="text" class="form-control small" placeholder="Enter Department" name="staffDepartment" required>
+                            <input placeholder="Date of Appointment" class="form-control smaller" type="text" name="staffdoa" onfocus="(this.type='date')" onblur="(this.type='text')" id="date" required/>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control middle" placeholder="Enter State of Origin" name="staffState" required>
+                            <input type="text" class="form-control middle" placeholder="Enter Local Government of Origin" name="staffLGA" required>
+                        </div>
+                        <button type="submit" class="btn btn-secondary float"><i class="fa fa-plus"></i> Add Staff</button>
+                    </form>
+                </div>
             </div>
-        </div>
-
-    </div>
-
         </div>
     </div>
     {% include 'footer.html' %}
@@ -73,16 +58,16 @@
     </script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-        setTimeout(function() {
-        var preloader = document.getElementById('preloader');
-        preloader.style.display = 'none';
-        
-        var content = document.getElementById('content');
-        content.style.display = 'block';
-        
-        document.body.style.overflow = 'auto';
-    }, 3000);  
-});
+            setTimeout(function() {
+                var preloader = document.getElementById('preloader');
+                preloader.style.display = 'none';
+                
+                var content = document.getElementById('content');
+                content.style.display = 'block';
+                
+                document.body.style.overflow = 'auto';
+            }, 3000);  
+        });
     </script>
 </body>
 </html>

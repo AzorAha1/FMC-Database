@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FMC BKD | {{ title }} </title>
+    <title>FMC BKD | {{ title }}</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" rel="stylesheet">
     <link rel="stylesheet" href="../statics/css/dashboard.css">
-   
 </head>
 <body> 
     {% include 'header.html' %} 
@@ -15,42 +14,44 @@
         {% include 'sidebar.html' %} 
         <div id="content">
             <br>
-           <a href="{{ url_for('staff') }}">
-            <h3>
-              <i class="fas fa-plus"></i> {{title}}
-            </h3>
+            <a href="{{ url_for('staff') }}">
+                <h3>
+                    <i class="fas fa-plus"></i> {{title}}
+                </h3>
             </a> 
             <div class="container-box">
-               
-<div class="form-container"> 
-    <form method="post">
-        <div class="form-group">
-            <span>Name</span>
-            <input type="text" class="form-control small" id="username" placeholder="Enter Name" name="username">
-            <span>Password</span>
-            <input type="password" class="form-control small" id="password" placeholder="Enter Password" name="password">
-        </div>
-        <div class="form-group">
-            <span>File Number</span>
-            <input type="text" class="form-control small" id="filenumber" placeholder="Enter File Number" name="filenumber">
-            <span>Phone Number</span>
-            <input type="text" class="form-control small" id="staffpno" placeholder="Enter Phone Number" name="staffpno">
-        </div> 
-        <div class="form-group">    
-            <span>Email</span>        
-            <input type="email" class="form-control middle" id="staffemail" placeholder="Enter Email">
-            <span>Department</span>
-            <input type="text" class="form-control middle" id="userDepartment" placeholder="Enter Department">
-        </div>
-        <button type="submit" class="btn btn-secondary float"> <i class="fa fa-plus"></i> Add User</button>
-    </form>
-</div> 
-
+                <div class="form-container"> 
+                    <form method="post" action="{{ url_for('add_user') }}">
+                        <div class="form-group">
+                            <label for="username">Name</label>
+                            <input type="text" class="form-control small" id="username" name="username" placeholder="Enter Name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" class="form-control small" id="password" name="password" placeholder="Enter Password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="filenumber">File Number</label>
+                            <input type="text" class="form-control small" id="filenumber" name="filenumber" placeholder="Enter File Number" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="staffpno">Phone Number</label>
+                            <input type="text" class="form-control small" id="staffpno" name="staffpno" placeholder="Enter Phone Number" required>
+                        </div> 
+                        <div class="form-group">
+                            <label for="staffemail">Email</label>        
+                            <input type="email" class="form-control middle" id="staffemail" name="staffemail" placeholder="Enter Email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="userDepartment">Department</label>
+                            <input type="text" class="form-control middle" id="userDepartment" name="userDepartment" placeholder="Enter Department" required>
+                        </div>
+                        <button type="submit" class="btn btn-secondary float-right"> 
+                            <i class="fa fa-plus"></i> Add User
+                        </button>
+                    </form>
+                </div> 
             </div>
-        </div>
-
-    </div>
-
         </div>
     </div>
     {% include 'footer.html' %}
@@ -67,16 +68,16 @@
     </script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-        setTimeout(function() {
-        var preloader = document.getElementById('preloader');
-        preloader.style.display = 'none';
-        
-        var content = document.getElementById('content');
-        content.style.display = 'block';
-        
-        document.body.style.overflow = 'auto';
-    }, 3000);  
-});
+            setTimeout(function() {
+                var preloader = document.getElementById('preloader');
+                preloader.style.display = 'none';
+                
+                var content = document.getElementById('content');
+                content.style.display = 'block';
+                
+                document.body.style.overflow = 'auto';
+            }, 3000);  
+        });
     </script>
 </body>
 </html>

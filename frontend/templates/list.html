@@ -42,21 +42,23 @@
                         </thead>
                         <tbody id="staffTable">
                             <!-- Example row. In a real application, rows will be generated dynamically from data -->
+                            {% for staff_member in staff %}
                             <tr>
-                                <td>1</td>
-                                <td>JSA 194</td>
-                                <td>173421</td>
-                                <td>Aliyu Abubakar</td>
-                                <td>24/02/2002</td> 
-                                <td>It Unit</td>
-                                <td>24/02/2024</td> 
-                                <td>24/02/2024</td> 
+                                <td>{{ loop.index }}</td>
+                                <td>{{ staff_member.fileNumber }}</td>
+                                <td>{{ staff_member.staffippissNumber }}</td>
+                                <td>{{ staff_member.firstName }} {{ staff_member.midName }} {{ staff_member.lastName }}</td>
+                                <td>{{ staff_member.dob }}</td>
+                                <td>{{ staff_member.department }}</td>
+                                <td>{{ staff_member.dateOfApt }}</td>
+                                <td>{{ staff_member.staffdapa }}</td>
                                 <td>
                                     <button class="btn btn-info btn-sm"><i class="fas fa-eye"></i></button>
                                     <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></button>
                                     <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
                                 </td>
                             </tr> 
+                            {% endfor %}
                         </tbody>
                     </table>
                     <nav>
