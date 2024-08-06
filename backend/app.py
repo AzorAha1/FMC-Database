@@ -6,6 +6,7 @@ import bcrypt
 from bson import ObjectId
 from flask import Flask, flash, render_template, request, redirect, url_for, session
 from flask_pymongo import PyMongo
+import uuid
 
 app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/statics')
 app.secret_key = 'secretkeyforfmcdatabase'
@@ -50,6 +51,7 @@ def login():
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
+    print('Session:', session)
     """dashboard file"""
     return render_template('dashboard.html', title='Dashboard')
 
@@ -109,7 +111,7 @@ def table_list():
     permenent_staff_list = user.get('permenentStaff', [])
     return render_template('list.html', title='List of Permanent and Pensionable', staff=permenent_staff_list)
 @app.route('/Confirmation', methods=['GET', 'POST'])
-# @login_required
+@login_required
 def confirmation():
     """Confirmation"""
     return render_template('confirmation.html', title='Confirmation')
@@ -126,6 +128,8 @@ def promotion():
 def add_lcm():
     """Add LCM Staff"""
     print(session)
+    unique_id = str(uuid.uuid4())
+    print(unique_id)
     user_email = session.get('email')
     user = mongo.db.user.find_one({'email': user_email})
     if not user:
@@ -133,6 +137,7 @@ def add_lcm():
     
     if request.method == 'POST':
         staff = {
+            'lcmstaff_id': unique_id,
             'firstName': request.form.get('stafffirstName'),
             'midName': request.form.get('staffmidName'),
             'lastName': request.form.get('stafflastName'),
@@ -173,7 +178,29 @@ def list_Lcm():
     lcm_staff_list = user.get('lcmStaff', [])
     
     return render_template('list_lcm.html', title='List of Locum Staffs', staff=lcm_staff_list)
-
+@app.route('/view_lcmstaff', methods=['GET', 'POST'])
+@login_required
+def view_lcmstaff():
+    """This helps view staff"""
+    staff_id = request.form.get('staff_id')
+    user = mongo.db.user.find_one({'lcmStaff.lcmstaff_id': staff_id})
+    
+    if user and 'lcmStaff' in user:
+        for staff in user['lcmStaff']:
+            if staff.get('lcmstaff_id') == staff_id:
+                print(staff)
+                return staff
+    return 'Staff not found'
+@app.route('/edit_lcmstaff', methods=['GET, POST'])
+@login_required
+def edit_lcmstaff():
+    """this helps edit staff"""
+    pass
+@app.route('/view_lcmstaff', methods=['GET, POST'])
+@login_required
+def delete_lcmstaff():
+    """this helps delete staff"""
+    pass
 @app.route('/AddUser', methods=['GET', 'POST'])
 @login_required
 def add_user():
@@ -215,6 +242,7 @@ def add_user():
 def logout():
     """Logout"""
     session.pop('email', None)
+    print('Session cleared:', session) 
     print('User is logged out')
     return redirect(url_for('login'))
 

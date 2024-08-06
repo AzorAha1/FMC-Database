@@ -7,79 +7,83 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" rel="stylesheet">
     <link rel="stylesheet" href="../statics/css/dashboard.css">
-   
 </head>
-<body> 
-    {% include 'header.html' %} 
+<body>
+    {% include 'header.html' %}
     <div class="wrapper">
-        {% include 'sidebar.html' %} 
+        {% include 'sidebar.html' %}
         <div id="content">
             <br>
            <a href="{{ url_for('staff') }}">
             <h3>
               <i class="fas fa-plus"></i> {{title}}
             </h3>
-            </a> 
+            </a>
             <div class="container-box">
-               
-<div class="form-container"> 
-    <form method="post">
-        <div class="form-group"> 
-            <span >First Name:</span>
-            <input type="text" class="form-control smaller" id="staffName" name="stafffirstName" placeholder="Enter First Name">
-            <span>Middle Name:</span>
-            <input type="text" class="form-control smaller" id="staffName" name="staffmidName" placeholder="Enter Middle Name">
-            <span>Last Name:</span>
-            <input type="text" class="form-control smaller" id="staffName" name="stafflastName" placeholder="Enter Last Name">
-            <span>Date of Birth</span>
-            <input type="date" class="form-control smaller" id="staffRole" name="staffdob" placeholder="Enter role">
-        </div>
-        <div class="form-group">
-            <span>File Number</span>
-            <input type="text" class="form-control smaller" id="stafffileno" name="fileNumber" placeholder="Enter File No">
-            <span>IPPIS Number</span>
-            <input type="number" class="form-control smaller" id="staffippissNumber" name="staffippissNumber" placeholder="Enter IPPIS Number">
-            <span>Rank</span>
-            <input type="text" class="form-control smaller" id="staffrank" name="staffrank" placeholder="Enter Staff rank">
-            <span>Salary Grade / Step</span>
-            <input type="text" class="form-control smaller" id="staffsalgrade" name="staffsalgrade" placeholder="Enter Salary Grade">
-        </div> 
-        <div class="form-group">          
-           <span>Date of First Appointment</span>
-            <input type="date" class="form-control middle" id="staffdofa" name="staffdoa" placeholder="Enter role">
-            <span>Date of Present Appointment</span>
-            <input type="date" class="form-control middle" id="staffdopa" name="staffdapa" placeholder="Enter role">
-        </div>
-        <div class="form-group">          
-            <span>Select Gender</span>
-             <select name="gender" id="staffgender" class="form-control smaller">
-                <option value="">_</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-             </select>
-             <span>State of Origin</span>
-             <input type="text" class="form-control smaller" id="staffRole" name="stafforigin" placeholder="State of Origin">
-             <span>Local Government of Origin</span>
-             <input type="text" class="form-control smaller" id="staffRole" name="localgovorigin" placeholder="Local Government of Origin">
-             <span>Qualification</span>
-             <input type="text" class="form-control smaller" name="qualification" placeholder="Qualification">
-         </div>
-         <div class="form-group">
-           
-         </div>
-        <button type="submit" class="btn btn-secondary float"> <i class="fa fa-plus"></i> Add Staff</button>
-    </form>
-</div> 
-
+                <div class="form-container">
+                    <form method="post">
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="stafffirstName" name="stafffirstName" placeholder="Enter First Name">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="staffmidName" name="staffmidName" placeholder="Enter Middle Name">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="stafflastName" name="stafflastName" placeholder="Enter Last Name">
+                        </div>
+                        <div class="form-group">
+                            <input type="date" class="form-control" id="staffdob" name="staffdob" placeholder="Enter Date of Birth">
+                        </div>
+                        <div class="form-group">
+                            <select id="staffType" class="form-control">
+                                <option value="">Choose Staff Type</option>
+                                <option value="SSA">Senior Staff (SSA)</option>
+                                <option value="JSA">Junior Staff (JSA)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="stafffileno" name="fileNumber" placeholder="Enter File No">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <input type="number" class="form-control" id="staffippissNumber" name="staffippissNumber" placeholder="Enter IPPIS Number">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="staffrank" name="staffrank" placeholder="Enter Staff Rank">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="staffsalgrade" name="staffsalgrade" placeholder="Enter Salary Grade">
+                        </div>
+                        <div class="form-group">
+                            <input type="date" class="form-control" id="staffdofa" name="staffdoa" placeholder="Enter Date of First Appointment">
+                        </div>
+                        <div class="form-group">
+                            <input type="date" class="form-control" id="staffdopa" name="staffdapa" placeholder="Enter Date of Present Appointment">
+                        </div>
+                        <div class="form-group">
+                            <select name="gender" id="staffgender" class="form-control">
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="stafforigin" name="stafforigin" placeholder="State of Origin">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="localgovorigin" name="localgovorigin" placeholder="Local Government of Origin">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" name="qualification" placeholder="Qualification">
+                        </div>
+                        <button type="submit" class="btn btn-secondary float"> <i class="fa fa-plus"></i> Add Staff</button>
+                    </form>
+                </div>
             </div>
-        </div>
-
-    </div>
-
         </div>
     </div>
     {% include 'footer.html' %}
-
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
@@ -88,20 +92,25 @@
             $('#sidebarCollapse').on('click', function () {
                 $('.wrapper').toggleClass('toggled');
             });
+
+            $('#staffType').on('change', function() {
+                var selectedType = $(this).val();
+                $('#filePrefix').text(selectedType);
+            });
         });
     </script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-        setTimeout(function() {
-        var preloader = document.getElementById('preloader');
-        preloader.style.display = 'none';
-        
-        var content = document.getElementById('content');
-        content.style.display = 'block';
-        
-        document.body.style.overflow = 'auto';
-    }, 3000);  
-});
+            setTimeout(function() {
+                var preloader = document.getElementById('preloader');
+                preloader.style.display = 'none';
+                
+                var content = document.getElementById('content');
+                content.style.display = 'block';
+                
+                document.body.style.overflow = 'auto';
+            }, 3000);
+        });
     </script>
 </body>
 </html>
