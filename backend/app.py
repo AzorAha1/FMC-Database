@@ -21,6 +21,7 @@ def login_required(func):
             return redirect(url_for('login'))
         return func(*args, **kwargs)
     return wrapper
+
 @app.route('/', methods=['GET'])
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -28,8 +29,6 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-
-        # Ensure the collection is properly assigned
         user_collection = mongo.db.user
 
         # Check if the user exists
@@ -40,10 +39,13 @@ def login():
                 session['email'] = email
                 return redirect(url_for('dashboard'))
             else:
-                return 'Invalid email or password', 400
+                flash('Invalid email or password', 'danger')
+                return redirect(url_for('login'))
         else:
-            return 'Invalid email or password', 400
-    return render_template('login.html', title='Login ')
+            flash('Invalid email or password', 'danger')
+            return redirect(url_for('login'))
+
+    return render_template('login.html', title='Login')
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
@@ -107,7 +109,7 @@ def table_list():
     permenent_staff_list = user.get('permenentStaff', [])
     return render_template('list.html', title='List of Permanent and Pensionable', staff=permenent_staff_list)
 @app.route('/Confirmation', methods=['GET', 'POST'])
-@login_required
+# @login_required
 def confirmation():
     """Confirmation"""
     return render_template('confirmation.html', title='Confirmation')
