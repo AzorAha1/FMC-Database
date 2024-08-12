@@ -50,7 +50,7 @@ def login():
     return render_template('login.html', title='Login')
 
 @app.route('/dashboard', methods=['GET', 'POST'])
-@login_required
+# @login_required
 def dashboard():
     print('Session:', session)
     """dashboard file"""
@@ -100,7 +100,7 @@ def staff():
 def table_list():
     """List of Staff"""
     permanent_staff_list = mongo.db.permanent_staff.find()
-    return render_template('list.html', title='List of Permanent and Pensionable', staff=permenent_staff_list)
+    return render_template('list.html', title='List of Permanent and Pensionable', staff=permanent_staff_list)
 @app.route('/Confirmation', methods=['GET', 'POST'])
 @login_required
 def confirmation():
@@ -158,35 +158,35 @@ def list_Lcm():
 @login_required
 def edit_lcmstaff(staff_id):
     """This helps edit staff"""
-    print("Staff ID:", staff_id)
+    staff = mongo.db.lcm_staff.find_one({'lcmstaff_id': staff_id})
     
+    if not staff:
+        flash('Staff not found', 'error')
+        return redirect(url_for('list_Lcm'))
+
     if request.method == 'POST':
-        print(f"first name: {request.form.get('stafffirstName')}")
-        # updated_lcmstaff = {
-        #     'firstName': request.form.get('stafffirstName'),
-        #     'midName': request.form.get('staffmidName'),
-        #     'lastName': request.form.get('stafflastName'),
-        #     'dob': request.form.get('staffdob'),
-        #     'fileNumber': request.form.get('stafffileNumber'),
-        #     'department': request.form.get('staffdepartment'),
-        #     'dateOfApt': request.form.get('staffdateOfApt'),
-        #     'phone': request.form.get('staffphone')
-        # }
-        # result = mongo.db.lcm_staff.update_one(
-        #     {'lcmstaff_id': staff_id},
-        #     {'$set': updated_lcmstaff}
-        # )
+        updated_lcmstaff = {
+            'firstName': request.form.get('stafffirstName'),
+            'midName': request.form.get('staffmidName'),
+            'lastName': request.form.get('stafflastName'),
+            'dob': request.form.get('staffdob'),
+            'fileNumber': request.form.get('stafffileNumber'),
+            'department': request.form.get('staffdepartment'),
+            'dateOfApt': request.form.get('staffdateOfApt'),
+            'phone': request.form.get('staffphone')
+        }
         
-        # if result.modified_count > 0:
-        #     flash('LCM staff updated successfully!', 'success')
-        #     return redirect(url_for('list_Lcm'))
-        # else:
-        #     flash('No changes made to the LCM staff.', 'info')
-    
-    # Retrieve the staff data directly using the staff_id
-    staff_id_obj = ObjectId(staff_id)
-    staff = mongo.db.lcm_staff.find_one({'_id': staff_id_obj})
-    print("Staff data:", staff)
+        result = mongo.db.lcm_staff.update_one(
+            {'lcmstaff_id': staff_id},
+            {'$set': updated_lcmstaff}
+        )
+        
+        if result.modified_count > 0:
+            flash('LCM staff updated successfully!', 'success')
+        else:
+            flash('No changes made to the LCM staff.', 'info')
+        
+        return redirect(url_for('list_Lcm'))
     
     return render_template('edit_lcmstaff.html', title="Edit LCM Staff", staff=staff)
 @app.route('/delete_lcmstaff/<string:staff_id>', methods=['GET, POST'])
@@ -197,7 +197,7 @@ def delete_lcmstaff(staff_id):
     print(staff_list)
     return staff_list
 @app.route('/AddUser', methods=['GET', 'POST'])
-@login_required
+# @login_required
 def add_user():
     """Add user"""
     if request.method == 'POST':

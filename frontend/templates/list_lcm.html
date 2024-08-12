@@ -47,14 +47,12 @@
                                 <td>{{ staff_member.department }}</td>
                                 <td>{{ staff_member.dateOfApt }}</td>
                                 <td>
-                                    <form action="{{ url_for('edit_lcmstaff', staff_id=staff_member.lcmstaff_id) }}" method="post" style="display:inline;">
-                                        <input type="hidden" name="staff_id" value="{{ staff_member.lcmstaff_id }}">
-                                        <button type="submit" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></button>
-                                    </form>
-                                    <form action="{{ url_for('delete_lcmstaff', staff_id=staff_member.lcmstaff_id) }}" method="post" style="display:inline;">
-                                        <input type="hidden" name="staff_id" value="{{ staff_member.lcmstaff_id }}">
-                                        <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
-                                    </form>
+                                    <a href="{{ url_for('edit_lcmstaff', staff_id=staff_member.lcmstaff_id) }}" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('delete_lcmstaff', staff_id=staff_member.lcmstaff_id) }}" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
                                 </td>
                             </tr>
                             {% endfor %}
