@@ -4,9 +4,10 @@ from functools import wraps
 from unittest import result
 import bcrypt
 from bson import ObjectId
-from flask import Flask, flash, render_template, request, redirect, url_for, session
+from flask import Flask, flash, render_template, request, redirect, url_for, session, jsonify
 from flask_pymongo import PyMongo
 import uuid
+
 
 app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/statics')
 app.secret_key = 'secretkeyforfmcdatabase'
@@ -85,30 +86,20 @@ def staff():
             'qualification': request.form.get('qualification')
         }
       
-        result = mongo.db.user.update_one(
-            {'email': user_email},
-            {'$push': {'permenentStaff': staff}}
-        )
+        permanent_staff = mongo.db.permanent_staff.insert_one(staff)
 
-        if result.modified_count == 1:
-            print('LCM staff added successfully!')
-            flash('LCM staff added successfully!', 'success')
+        if permanent_staff:
+            print('Permanent staff added successfully!')
+            flash('Permanent staff added successfully!', 'success')
         else:
-            print('Failed to add LCM staff. Please try again.', 'danger')
-            flash('Failed to add LCM staff. Please try again.', 'danger')
+            print('Failed to add Permanent staff. Please try again.', 'danger')
+            flash('Failed to add Permanent staff. Please try again.', 'danger')
     return render_template('add_staff.html', title='Add Permanent and Pensionable')
 @app.route('/Listofstaff', methods=['GET', 'POST'])
 @login_required
 def table_list():
     """List of Staff"""
-    user_email = session.get('email')
-    user = mongo.db.user.find_one({'email': user_email})
-
-    if not user or 'permenentStaff' not in user:
-        flash('No LCM staff found', 'danger')
-        return redirect(url_for('dashboard'))
-
-    permenent_staff_list = user.get('permenentStaff', [])
+    permanent_staff_list = mongo.db.permanent_staff.find()
     return render_template('list.html', title='List of Permanent and Pensionable', staff=permenent_staff_list)
 @app.route('/Confirmation', methods=['GET', 'POST'])
 @login_required
@@ -130,11 +121,6 @@ def add_lcm():
     print(session)
     unique_id = str(uuid.uuid4())
     print(unique_id)
-    user_email = session.get('email')
-    user = mongo.db.user.find_one({'email': user_email})
-    if not user:
-        return redirect(url_for('login'))
-    
     if request.method == 'POST':
         staff = {
             'lcmstaff_id': unique_id,
@@ -148,13 +134,10 @@ def add_lcm():
             'phone': request.form.get('staffpno')
         }
 
-        # Add the staff to the LCM staff list within the user's document
-        result = mongo.db.user.update_one(
-            {'email': user_email},
-            {'$push': {'lcmStaff': staff}}
-        )
+        # Add the staff to the LCM staff list
+        lcm_staff = mongo.db.lcm_staff.insert_one(staff)
 
-        if result.modified_count == 1:
+        if lcm_staff:
             print('LCM staff added successfully!')
             flash('LCM staff added successfully!', 'success')
         else:
@@ -168,39 +151,51 @@ def add_lcm():
 @login_required
 def list_Lcm():
     """List_Lcm"""
-    user_email = session.get('email')
-    user = mongo.db.user.find_one({'email': user_email})
-
-    if not user or 'lcmStaff' not in user:
-        flash('No LCM staff found', 'danger')
-        return redirect(url_for('dashboard'))
-
-    lcm_staff_list = user.get('lcmStaff', [])
+    lcm_staff_list = mongo.db.lcm_staff.find()
     
     return render_template('list_lcm.html', title='List of Locum Staffs', staff=lcm_staff_list)
-@app.route('/view_lcmstaff', methods=['GET', 'POST'])
+@app.route('/edit_lcmstaff/<string:staff_id>', methods=['GET', 'POST'])
 @login_required
-def view_lcmstaff():
-    """This helps view staff"""
-    staff_id = request.form.get('staff_id')
-    user = mongo.db.user.find_one({'lcmStaff.lcmstaff_id': staff_id})
+def edit_lcmstaff(staff_id):
+    """This helps edit staff"""
+    print("Staff ID:", staff_id)
     
-    if user and 'lcmStaff' in user:
-        for staff in user['lcmStaff']:
-            if staff.get('lcmstaff_id') == staff_id:
-                print(staff)
-                return staff
-    return 'Staff not found'
-@app.route('/edit_lcmstaff', methods=['GET, POST'])
+    if request.method == 'POST':
+        print(f"first name: {request.form.get('stafffirstName')}")
+        # updated_lcmstaff = {
+        #     'firstName': request.form.get('stafffirstName'),
+        #     'midName': request.form.get('staffmidName'),
+        #     'lastName': request.form.get('stafflastName'),
+        #     'dob': request.form.get('staffdob'),
+        #     'fileNumber': request.form.get('stafffileNumber'),
+        #     'department': request.form.get('staffdepartment'),
+        #     'dateOfApt': request.form.get('staffdateOfApt'),
+        #     'phone': request.form.get('staffphone')
+        # }
+        # result = mongo.db.lcm_staff.update_one(
+        #     {'lcmstaff_id': staff_id},
+        #     {'$set': updated_lcmstaff}
+        # )
+        
+        # if result.modified_count > 0:
+        #     flash('LCM staff updated successfully!', 'success')
+        #     return redirect(url_for('list_Lcm'))
+        # else:
+        #     flash('No changes made to the LCM staff.', 'info')
+    
+    # Retrieve the staff data directly using the staff_id
+    staff_id_obj = ObjectId(staff_id)
+    staff = mongo.db.lcm_staff.find_one({'_id': staff_id_obj})
+    print("Staff data:", staff)
+    
+    return render_template('edit_lcmstaff.html', title="Edit LCM Staff", staff=staff)
+@app.route('/delete_lcmstaff/<string:staff_id>', methods=['GET, POST'])
 @login_required
-def edit_lcmstaff():
-    """this helps edit staff"""
-    pass
-@app.route('/view_lcmstaff', methods=['GET, POST'])
-@login_required
-def delete_lcmstaff():
+def delete_lcmstaff(staff_id):
     """this helps delete staff"""
-    pass
+    staff_list = mongo.db.find_one({'lcmstaff_id': staff_id})
+    print(staff_list)
+    return staff_list
 @app.route('/AddUser', methods=['GET', 'POST'])
 @login_required
 def add_user():

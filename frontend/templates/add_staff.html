@@ -23,19 +23,19 @@
                 <div class="form-container">
                     <form method="post">
                         <div class="form-group">
-                            <input type="text" class="form-control" id="stafffirstName" name="stafffirstName" placeholder="Enter First Name">
+                            <input type="text" class="form-control" id="stafffirstName" name="stafffirstName" placeholder="Enter First Name" required>
                         </div>
                         <div class="form-group">
                             <input type="text" class="form-control" id="staffmidName" name="staffmidName" placeholder="Enter Middle Name">
                         </div>
                         <div class="form-group">
-                            <input type="text" class="form-control" id="stafflastName" name="stafflastName" placeholder="Enter Last Name">
+                            <input type="text" class="form-control" id="stafflastName" name="stafflastName" placeholder="Enter Last Name" required>
                         </div>
                         <div class="form-group">
-                            <input type="date" class="form-control" id="staffdob" name="staffdob" placeholder="Enter Date of Birth">
+                            <input type="date" class="form-control" id="staffdob" name="staffdob" placeholder="Enter Date of Birth" required>
                         </div>
                         <div class="form-group">
-                            <select id="staffType" class="form-control">
+                            <select id="staffType" class="form-control" required>
                                 <option value="">Choose Staff Type</option>
                                 <option value="SSA">Senior Staff (SSA)</option>
                                 <option value="JSA">Junior Staff (JSA)</option>
@@ -43,17 +43,17 @@
                         </div>
                         <div class="form-group">
                             <div class="input-group">
-                                <input type="text" class="form-control" id="stafffileno" name="fileNumber" placeholder="Enter File No">
+                                <input type="text" class="form-control" id="stafffileno" name="fileNumber" placeholder="Enter File No" required>
                             </div>
                         </div>
                         <div class="form-group">
-                            <input type="number" class="form-control" id="staffippissNumber" name="staffippissNumber" placeholder="Enter IPPIS Number">
+                            <input type="number" class="form-control" id="staffippissNumber" name="staffippissNumber" placeholder="Enter IPPIS Number" required>
                         </div>
                         <div class="form-group">
-                            <input type="text" class="form-control" id="staffrank" name="staffrank" placeholder="Enter Staff Rank">
+                            <input type="text" class="form-control" id="staffrank" name="staffrank" placeholder="Enter Staff Rank" required>
                         </div>
                         <div class="form-group">
-                            <input type="text" class="form-control" id="staffsalgrade" name="staffsalgrade" placeholder="Enter Salary Grade">
+                            <input type="text" class="form-control" id="staffsalgrade" name="staffsalgrade" placeholder="Enter Salary Grade" required>
                         </div>
                         <div class="form-group">
                             <input type="date" class="form-control" id="staffdofa" name="staffdoa" placeholder="Enter Date of First Appointment">
@@ -62,20 +62,20 @@
                             <input type="date" class="form-control" id="staffdopa" name="staffdapa" placeholder="Enter Date of Present Appointment">
                         </div>
                         <div class="form-group">
-                            <select name="gender" id="staffgender" class="form-control">
+                            <select name="gender" id="staffgender" class="form-control" required>
                                 <option value="">Select Gender</option>
                                 <option value="Male">Male</option>
                                 <option value="Female">Female</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <input type="text" class="form-control" id="stafforigin" name="stafforigin" placeholder="State of Origin">
+                            <input type="text" class="form-control" id="stafforigin" name="stafforigin" placeholder="State of Origin" required>
                         </div>
                         <div class="form-group">
-                            <input type="text" class="form-control" id="localgovorigin" name="localgovorigin" placeholder="Local Government of Origin">
+                            <input type="text" class="form-control" id="localgovorigin" name="localgovorigin" placeholder="Local Government of Origin" required>
                         </div>
                         <div class="form-group">
-                            <input type="text" class="form-control" name="qualification" placeholder="Qualification">
+                            <input type="text" class="form-control" name="qualification" placeholder="Qualification" required>
                         </div>
                         <button type="submit" class="btn btn-secondary float"> <i class="fa fa-plus"></i> Add Staff</button>
                     </form>

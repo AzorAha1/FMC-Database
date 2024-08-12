@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FMC BKD | Edit Staff</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" rel="stylesheet">
+    <link rel="stylesheet" href="../statics/css/dashboard.css">
+</head>
+<body>
+    {% include 'header.html' %}
+    <div class="wrapper">
+        {% include 'sidebar.html' %}
+        <div id="content">
+            <br>
+            <a href="{{ url_for('staff') }}">
+                <h3><i class="fas fa-edit"></i> Edit LCM Staff</h3>
+            </a>
+            <div class="container-box">
+                <div class="form-container">
+                    <form method="POST" action="{{ url_for('edit_lcmstaff', staff_id=staff['lcmstaff_id']) }}">
+                        <input type="text" name="stafffirstName" value="{{ staff.firstName }}" />
+                        <input type="text" name="staffmidName" value="{{ staff.midName }}" />
+                        <input type="text" name="stafflastName" value="{{ staff.lastName }}" />
+                        <input type="date" name="staffdob" value="{{ staff.dob }}" />
+                        <input type="text" name="stafffileNumber" value="{{ staff.fileNumber }}" />
+                        <input type="text" name="staffdepartment" value="{{ staff.department }}" />
+                        <input type="date" name="staffdateOfApt" value="{{ staff.dateOfApt }}" />
+                        <input type="text" name="staffphone" value="{{ staff.phone }}" />
+                        <button type="submit">Update</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'footer.html' %}
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#sidebarCollapse').on('click', function () {
+                $('.wrapper').toggleClass('toggled');
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            setTimeout(function() {
+                var preloader = document.getElementById('preloader');
+                preloader.style.display = 'none';
+                
+                var content = document.getElementById('content');
+                content.style.display = 'block';
+                
+                document.body.style.overflow = 'auto';
+            }, 3000);  
+        });
+    </script>
+</body>
+</html>
