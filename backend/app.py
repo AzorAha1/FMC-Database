@@ -61,6 +61,8 @@ def dashboard():
 def staff():
     """Add Staff"""
     print(session)
+    unique_id = str(uuid.uuid4())
+    print(unique_id)
     user_email = session.get('email')
     user = mongo.db.user.find_one({'email': user_email})
     if not user:
@@ -68,18 +70,20 @@ def staff():
     
     if request.method == 'POST':
         staff = {
+            'staff_id': unique_id,
             'firstName': request.form.get('stafffirstName'),
             'midName': request.form.get('staffmidName'),
             'lastName': request.form.get('stafflastName'),
             'dob': request.form.get('staffdob'),
-            'fileNumber': request.form.get('filenumber'),
-            'department': request.form.get('staffDepartment'),
-            'dateOfApt': request.form.get('staffdoa'),
+            'fileNumber': request.form.get('fileNumber'),
+            'department': request.form.get('department'),
+            'staffdateoffirstapt': request.form.get('staffdofa'),
+            'dateoffirstapt': request.form.get('staffdofa'),
             'phone': request.form.get('staffpno'),
             'staffippissNumber': request.form.get('staffippissNumber'),
             'staffrank': request.form.get('staffrank'),
             'staffsalgrade': request.form.get('staffsalgrade'),
-            'staffdapa': request.form.get('staffdapa'),
+            'staffdateofpresentapt': request.form.get('staffdopa'),
             'staffgender': request.form.get('gender'),
             'stafforigin': request.form.get('stafforigin'),
             'localgovorigin': request.form.get('localgovorigin'),
@@ -95,6 +99,53 @@ def staff():
             print('Failed to add Permanent staff. Please try again.', 'danger')
             flash('Failed to add Permanent staff. Please try again.', 'danger')
     return render_template('add_staff.html', title='Add Permanent and Pensionable')
+
+@app.route('/edit_staff/<string:staff_id>', methods=['GET', 'POST'])
+@login_required
+def edit_staff(staff_id):
+    staff = mongo.db.permanent_staff.find_one({'staff_id': staff_id})
+    if not staff:
+        flash('Staff not found', 'error')
+        return redirect(url_for('table_list'))
+    if request.method == 'POST':
+       updated_staff = {
+            'firstName': request.form.get('stafffirstName'),
+            'midName': request.form.get('staffmidName'),
+            'lastName': request.form.get('stafflastName'),
+            'dob': request.form.get('staffdob'),
+            'fileNumber': request.form.get('fileNumber'),
+            'department': request.form.get('department'),
+            'phone': request.form.get('staffpno'),
+            'staffippissNumber': request.form.get('staffippissNumber'),
+            'staffrank': request.form.get('staffrank'),
+            'staffsalgrade': request.form.get('staffsalgrade'),
+            'staffdateofpresentapt': request.form.get('staffdopa'),
+            'staffgender': request.form.get('gender'),
+            'stafforigin': request.form.get('stafforigin'),
+            'localgovorigin': request.form.get('localgovorigin'),
+            'qualification': request.form.get('qualification')
+        }
+       result = mongo.db.permanent_staff.update_one(
+            {'staff_id': staff_id},
+            {'$set': updated_staff}
+        )
+       if result.modified_count > 0:
+            flash('Staff updated successfully!', 'success')
+            return redirect(url_for('table_list'))
+    return render_template('edit_staff.html', title='Edit Staff', staff=staff)
+@app.route('/delete_staff/<string:staff_id>', methods=['GET', 'POST'])
+@login_required
+def delete_staff(staff_id):
+    staff = mongo.db.permanent_staff.find_one({'staff_id': staff_id})
+    if not staff:
+        flash('Staff not found', 'error')
+        return redirect(url_for('table_list'))
+    if request.method == 'POST':
+        mongo.db.permanent_staff.delete_one({'staff_id': staff_id})
+        flash('Staff deleted successfully!', 'success')
+        print(f"{staff['firstName']} successfully deleted")
+        redirect(url_for('table_list'))
+    return render_template('delete_staff.html', title='Delete Staff', staff=staff)
 @app.route('/Listofstaff', methods=['GET', 'POST'])
 @login_required
 def table_list():
@@ -189,13 +240,21 @@ def edit_lcmstaff(staff_id):
         return redirect(url_for('list_Lcm'))
     
     return render_template('edit_lcmstaff.html', title="Edit LCM Staff", staff=staff)
-@app.route('/delete_lcmstaff/<string:staff_id>', methods=['GET, POST'])
+@app.route('/delete_lcmstaff/<string:staff_id>', methods=['GET', 'POST'])
 @login_required
 def delete_lcmstaff(staff_id):
-    """this helps delete staff"""
-    staff_list = mongo.db.find_one({'lcmstaff_id': staff_id})
-    print(staff_list)
-    return staff_list
+    """This helps delete staff"""
+    staff = mongo.db.lcm_staff.find_one({'lcmstaff_id': staff_id})
+    if not staff:
+        flash('Staff not found', 'error')
+        return redirect(url_for('list_Lcm'))
+    if request.method == 'POST':
+        mongo.db.lcm_staff.delete_one({'lcmstaff_id': staff_id})
+        flash('Staff deleted successfully!', 'success')
+        print(f"{staff['firstName']} successfully deleted")
+        redirect(url_for('list_Lcm'))
+    return render_template('delete_lcmstaff.html', title='Delete LCM Staff', staff=staff)
+        
 @app.route('/AddUser', methods=['GET', 'POST'])
 # @login_required
 def add_user():

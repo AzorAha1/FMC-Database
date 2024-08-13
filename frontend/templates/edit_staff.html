@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FMC BKD | {{ title }}</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" rel="stylesheet">
+    <link rel="stylesheet" href="../statics/css/dashboard.css">
+</head>
+<body>
+    {% include 'header.html' %}
+    <div class="wrapper">
+        {% include 'sidebar.html' %}
+        <div id="content">
+            <br>
+            <a href="{{ url_for('staff') }}">
+                <h3><i class="fas fa-edit"></i> {{ title }}</h3>
+            </a>
+            <div class="container-box">
+                <div class="form-container">
+                    <form method="post" action="{{ url_for('edit_staff', staff_id=staff['staff_id']) }}">
+                        <div class="form-group">
+                            <label for="stafffirstName">First Name</label>
+                            <input type="text" class="form-control" id="stafffirstName" name="stafffirstName" value="{{ staff.firstName }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="staffmidName">Middle Name</label>
+                            <input type="text" class="form-control" id="staffmidName" name="staffmidName" value="{{ staff.midName }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="stafflastName">Last Name</label>
+                            <input type="text" class="form-control" id="stafflastName" name="stafflastName" value="{{ staff.lastName }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="department">Department</label>
+                            <input type="text" class="form-control" id="department" name="department" value="{{ staff.department }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="staffdob">Date of Birth</label>
+                            <input class="form-control" type="date" id="staffdob" name="staffdob" value="{{ staff.dob }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fileNumber">File No</label>
+                            <input type="text" class="form-control" id="fileNumber" name="fileNumber" value="{{ staff.fileNumber }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="staffippissNumber">IPPIS Number</label>
+                            <input type="number" class="form-control" id="staffippissNumber" name="staffippissNumber" value="{{ staff.staffippissNumber }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="staffrank">Staff Rank</label>
+                            <input type="text" class="form-control" id="staffrank" name="staffrank" value="{{ staff.staffrank }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="staffsalgrade">Salary Grade</label>
+                            <input type="text" class="form-control" id="staffsalgrade" name="staffsalgrade" value="{{ staff.staffsalgrade }}" required>
+                        </div>
+                       
+                        <div class="form-group">
+                            <label for="staffdopa">Date of Present Appointment</label>
+                            <input class="form-control" type="date" id="staffdopa" name="staffdopa" value="{{ staff.staffdateofpresentapt }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="stafforigin">State of Origin</label>
+                            <input type="text" class="form-control" id="stafforigin" name="stafforigin" value="{{ staff.stafforigin }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="localgovorigin">Local Government of Origin</label>
+                            <input type="text" class="form-control" id="localgovorigin" name="localgovorigin" value="{{ staff.localgovorigin }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="qualification">Qualification</label>
+                            <input type="text" class="form-control" id="qualification" name="qualification" value="{{ staff.qualification }}" required>
+                        </div>
+                        <button type="submit" class="btn btn-secondary float"><i class="fa fa-save"></i> Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'footer.html' %}
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#sidebarCollapse').on('click', function () {
+                $('.wrapper').toggleClass('toggled');
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            setTimeout(function() {
+                var preloader = document.getElementById('preloader');
+                preloader.style.display = 'none';
+                
+                var content = document.getElementById('content');
+                content.style.display = 'block';
+                
+                document.body.style.overflow = 'auto';
+            }, 3000);  
+        });
+    </script>
+</body>
+</html>

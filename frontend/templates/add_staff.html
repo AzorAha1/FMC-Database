@@ -32,7 +32,13 @@
                             <input type="text" class="form-control" id="stafflastName" name="stafflastName" placeholder="Enter Last Name" required>
                         </div>
                         <div class="form-group">
-                            <input type="date" class="form-control" id="staffdob" name="staffdob" placeholder="Enter Date of Birth" required>
+                            <input type="text" class="form-control" id="department" name="department" placeholder="Enter Department" required>
+                        </div>
+                        <div class="form-group">
+                            <input placeholder="Enter Date of Birth" class="form-control smaller" type="text" id="staffdob" name="staffdob" onfocus="(this.type='date')" onblur="(this.type='text')" required/>
+                        </div>
+                        <div class="form-group">
+                            <input type="number" placeholder="Phone Number" id="staffpno" name="staffpno" required>
                         </div>
                         <div class="form-group">
                             <select id="staffType" class="form-control" required>
@@ -56,10 +62,10 @@
                             <input type="text" class="form-control" id="staffsalgrade" name="staffsalgrade" placeholder="Enter Salary Grade" required>
                         </div>
                         <div class="form-group">
-                            <input type="date" class="form-control" id="staffdofa" name="staffdoa" placeholder="Enter Date of First Appointment">
+                            <input placeholder="Enter Date of First Appointment" class="form-control smaller" type="text" id="staffdofa" name="staffdofa" onfocus="(this.type='date')" onblur="(this.type='text')" required/>
                         </div>
                         <div class="form-group">
-                            <input type="date" class="form-control" id="staffdopa" name="staffdapa" placeholder="Enter Date of Present Appointment">
+                            <input placeholder="Enter Date of Present Appointment" class="form-control smaller" type="text" id="staffdopa" name="staffdopa" onfocus="(this.type='date')" onblur="(this.type='text')" required/>
                         </div>
                         <div class="form-group">
                             <select name="gender" id="staffgender" class="form-control" required>
