@@ -1,11 +1,11 @@
 #!/usr/bin/python3
-from datetime import timedelta
+from datetime import timedelta, datetime
 from functools import wraps
 from unittest import result
 import bcrypt
 from bson import ObjectId
 from flask import Flask, flash, render_template, request, redirect, url_for, session, jsonify
-from flask_pymongo import PyMongo
+from flask_pymongo import DESCENDING, PyMongo
 import uuid
 
 
@@ -50,7 +50,7 @@ def login():
     return render_template('login.html', title='Login')
 
 @app.route('/dashboard', methods=['GET', 'POST'])
-# @login_required
+@login_required
 def dashboard():
     print('Session:', session)
     """dashboard file"""
@@ -95,6 +95,7 @@ def staff():
         if permanent_staff:
             print('Permanent staff added successfully!')
             flash('Permanent staff added successfully!', 'success')
+            return redirect(url_for('table_list'))
         else:
             print('Failed to add Permanent staff. Please try again.', 'danger')
             flash('Failed to add Permanent staff. Please try again.', 'danger')
@@ -103,6 +104,8 @@ def staff():
 @app.route('/edit_staff/<string:staff_id>', methods=['GET', 'POST'])
 @login_required
 def edit_staff(staff_id):
+    userbysession = session.get('email')
+    current_user = mongo.db.user.find_one({'email': userbysession})
     staff = mongo.db.permanent_staff.find_one({'staff_id': staff_id})
     if not staff:
         flash('Staff not found', 'error')
@@ -131,11 +134,14 @@ def edit_staff(staff_id):
         )
        if result.modified_count > 0:
             flash('Staff updated successfully!', 'success')
+            log_reports(action='edit', staff_id=staff_id, details=f'Permanent staff updated by {current_user["username"]}({current_user["email"]}) from {current_user["department"]} department with File Number of {current_user["filenumber"]}')
             return redirect(url_for('table_list'))
     return render_template('edit_staff.html', title='Edit Staff', staff=staff)
 @app.route('/delete_staff/<string:staff_id>', methods=['GET', 'POST'])
 @login_required
 def delete_staff(staff_id):
+    userbysession = session.get('email')
+    current_user = mongo.db.user.find_one({'email': userbysession})
     staff = mongo.db.permanent_staff.find_one({'staff_id': staff_id})
     if not staff:
         flash('Staff not found', 'error')
@@ -143,15 +149,18 @@ def delete_staff(staff_id):
     if request.method == 'POST':
         mongo.db.permanent_staff.delete_one({'staff_id': staff_id})
         flash('Staff deleted successfully!', 'success')
+        log_reports(action='delete', staff_id=staff_id, details=f'Permanent staff deleted by {current_user["username"]}({current_user["email"]}) from {current_user["department"]} department with File Number of {current_user["filenumber"]}')
         print(f"{staff['firstName']} successfully deleted")
         redirect(url_for('table_list'))
     return render_template('delete_staff.html', title='Delete Staff', staff=staff)
+
 @app.route('/Listofstaff', methods=['GET', 'POST'])
 @login_required
 def table_list():
     """List of Staff"""
     permanent_staff_list = mongo.db.permanent_staff.find()
     return render_template('list.html', title='List of Permanent and Pensionable', staff=permanent_staff_list)
+
 @app.route('/Confirmation', methods=['GET', 'POST'])
 @login_required
 def confirmation():
@@ -163,7 +172,6 @@ def confirmation():
 def promotion():
     """Promotion"""
     return render_template('promotion.html', title='Promotion')
-
 
 @app.route('/addlcmstaff', methods=['GET', 'POST'])
 @login_required
@@ -184,7 +192,6 @@ def add_lcm():
             'dateOfApt': request.form.get('staffdoa'),
             'phone': request.form.get('staffpno')
         }
-
         # Add the staff to the LCM staff list
         lcm_staff = mongo.db.lcm_staff.insert_one(staff)
 
@@ -194,27 +201,25 @@ def add_lcm():
         else:
             print('Failed to add LCM staff. Please try again.', 'danger')
             flash('Failed to add LCM staff. Please try again.', 'danger')
-    
     return render_template('add_lcm.html', title='Add Locum Staffs')
-
 
 @app.route('/listlcmstaff', methods=['GET', 'POST'])
 @login_required
 def list_Lcm():
     """List_Lcm"""
     lcm_staff_list = mongo.db.lcm_staff.find()
-    
     return render_template('list_lcm.html', title='List of Locum Staffs', staff=lcm_staff_list)
+
 @app.route('/edit_lcmstaff/<string:staff_id>', methods=['GET', 'POST'])
 @login_required
 def edit_lcmstaff(staff_id):
     """This helps edit staff"""
+    userbysession = session.get('email')
+    current_user = mongo.db.user.find_one({'email': userbysession})
     staff = mongo.db.lcm_staff.find_one({'lcmstaff_id': staff_id})
-    
     if not staff:
         flash('Staff not found', 'error')
         return redirect(url_for('list_Lcm'))
-
     if request.method == 'POST':
         updated_lcmstaff = {
             'firstName': request.form.get('stafffirstName'),
@@ -226,37 +231,38 @@ def edit_lcmstaff(staff_id):
             'dateOfApt': request.form.get('staffdateOfApt'),
             'phone': request.form.get('staffphone')
         }
-        
         result = mongo.db.lcm_staff.update_one(
             {'lcmstaff_id': staff_id},
             {'$set': updated_lcmstaff}
         )
-        
         if result.modified_count > 0:
             flash('LCM staff updated successfully!', 'success')
+            log_reports(action='edit', staff_id=staff_id, details=f'LCM staff updated by {current_user["username"]}({current_user["email"]}) from {current_user["department"]} department with File Number of {current_user["filenumber"]}')
         else:
             flash('No changes made to the LCM staff.', 'info')
         
         return redirect(url_for('list_Lcm'))
-    
     return render_template('edit_lcmstaff.html', title="Edit LCM Staff", staff=staff)
 @app.route('/delete_lcmstaff/<string:staff_id>', methods=['GET', 'POST'])
 @login_required
 def delete_lcmstaff(staff_id):
     """This helps delete staff"""
     staff = mongo.db.lcm_staff.find_one({'lcmstaff_id': staff_id})
+    userbysession = session.get('email')
+    current_user = mongo.db.user.find_one({'email': userbysession})
     if not staff:
         flash('Staff not found', 'error')
         return redirect(url_for('list_Lcm'))
     if request.method == 'POST':
         mongo.db.lcm_staff.delete_one({'lcmstaff_id': staff_id})
         flash('Staff deleted successfully!', 'success')
+        log_reports(action='delete', staff_id=staff_id, details=f'LCM staff deleted by {current_user["username"]}({current_user["email"]}) from {current_user["department"]} department with File Number of {current_user["filenumber"]}')
         print(f"{staff['firstName']} successfully deleted")
         redirect(url_for('list_Lcm'))
     return render_template('delete_lcmstaff.html', title='Delete LCM Staff', staff=staff)
         
 @app.route('/AddUser', methods=['GET', 'POST'])
-# @login_required
+@login_required
 def add_user():
     """Add user"""
     if request.method == 'POST':
@@ -291,7 +297,24 @@ def add_user():
 
     return render_template('add_user.html', title='Add User')
 
-
+def log_reports(action, staff_id, details):
+    """Log reports"""
+    current_time = datetime.utcnow()
+    # formatted_time = current_time.strftime('%Y-%m-%d %H:%M %p')
+    report = {
+        'action': action,
+        'staff_id': staff_id,
+        'details': details,
+        'date': current_time
+    }
+    print(report)
+    mongo.db.reports.insert_one(report)
+@app.route('/reports', methods=['GET', 'POST'])
+@login_required
+def reports():
+    """Reports"""
+    reports = mongo.db.reports.find().sort('date', DESCENDING)
+    return render_template('reports.html', title='Reports', reports=reports)
 @app.route('/logout', methods=['GET'])
 def logout():
     """Logout"""

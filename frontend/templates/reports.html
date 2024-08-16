@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FMC BKD | {{ title }} </title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" rel="stylesheet">
+    <link rel="stylesheet" href="../statics/css/dashboard.css">
+   
+</head>
+<body>
+    <h1>Reports</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Action</th>
+                <th>Staff ID</th>
+                <th>Details</th>
+                <th>Date & Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in reports %}
+            <tr>
+                <td>{{ report.action }}</td>
+                <td>{{ report.staff_id }}</td>
+                <td>{{ report.details|tojson }}</td>
+                <td>{{ report.date.strftime('%Y-%m-%d %H:%M %p') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Go Back to Dashboard</a>
+</body>
+</html>
