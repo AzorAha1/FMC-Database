@@ -37,7 +37,9 @@
                                 <th>Department</th>
                                 <th>DOFA</th>
                                 <th>DOPA</th>
-                                <th>Actions</th>
+                                {% if session.get('role') == 'admin-user' %}
+                                    <th>Actions</th>
+                                {% endif %}
                             </tr>
                         </thead>
                         <tbody id="staffTable">
@@ -50,8 +52,9 @@
                                 <td>{{ staff_member.firstName }} {{ staff_member.midName }} {{ staff_member.lastName }}</td>
                                 <td>{{ staff_member.dob }}</td>
                                 <td>{{ staff_member.department }}</td>
-                                <td>{{ staff_member.dateoffirstapt }}</td>
-                                <td>{{ staff_member.dateofpresentapt }}</td>
+                                <td>{{ staff_member.staffdateoffirstapt }}</td>
+                                <td>{{ staff_member.staffdateofpresentapt }}</td>
+                                {% if session.get('role') == 'admin-user'%}
                                 <td>
                                     <a href="{{ url_for('edit_staff', staff_id=staff_member.staff_id) }}" class="btn btn-warning btn-sm">
                                         <i class="fas fa-edit"></i>
@@ -60,13 +63,13 @@
                                         <i class="fas fa-trash"></i>
                                     </a>
                                 </td>
-                            </tr> 
+                                {% endif %}
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                     <nav>
-                        <ul class="pagination justify-content-center" id="pagination">
-                             
+                        <ul class="pagination justify-content-center" id="pagination">   
                         </ul>
                     </nav>
                 </div>

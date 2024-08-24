@@ -24,6 +24,17 @@ def login_required(func):
         return func(*args, **kwargs)
     return wrapper
 
+def admin_required(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if session.get('role') != 'admin-user':
+            return redirect(url_for('dashboard'))
+        return func(*args, **kwargs)
+    return wrapper
+def confirmationofstaff():
+    """"this function checks for the confirmation of staff"""
+    dateoffirstapt = mongo.db.permenant_staff.find_one({'staffdateoffirstapt': 'staffdofa'})
+    print(dateoffirstapt)
 @app.route('/', methods=['GET'])
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -39,6 +50,7 @@ def login():
             # Check if the password is correct
             if bcrypt.checkpw(password.encode('utf-8'), user['password']):
                 session['email'] = email
+                session['role'] = user.get('role')
                 return redirect(url_for('dashboard'))
             else:
                 flash('Invalid email or password', 'danger')
@@ -54,8 +66,18 @@ def login():
 def dashboard():
     print('Session:', session)
     """dashboard file"""
-    return render_template('dashboard.html', title='Dashboard')
-
+    lcm_staff_count = mongo.db.lcm_staff.count_documents({})
+    total_permenentstaff_count = mongo.db.permanent_staff.count_documents({})
+    allstaffscount = lcm_staff_count + total_permenentstaff_count
+    total_users = mongo.db.user.count_documents({})
+    confirmationofstaff()
+    return render_template('dashboard.html',
+                           title='Dashboard',
+                           lcm_staff_count=lcm_staff_count,
+                           total_permenentstaff_count=total_permenentstaff_count,
+                           allstaffscount=allstaffscount,
+                           total_users=total_users
+                           )
 @app.route('/addstaff', methods=['GET', 'POST'])
 @login_required
 def staff():
@@ -67,27 +89,34 @@ def staff():
     user = mongo.db.user.find_one({'email': user_email})
     if not user:
         return redirect(url_for('login'))
-    
     if request.method == 'POST':
+        two_years = timedelta(days=730)
+        current_time = datetime.utcnow()
+        staff_date_of_first_appointment = datetime.strptime(request.form.get('staffdofa'), '%Y-%m-%d')
+        if current_time - staff_date_of_first_appointment > two_years:
+            confirmation_status = 'confirmed'
+        else:
+            confirmation_status = 'unconfirmed'
         staff = {
             'staff_id': unique_id,
             'firstName': request.form.get('stafffirstName'),
             'midName': request.form.get('staffmidName'),
             'lastName': request.form.get('stafflastName'),
+            'stafftype': request.form.get('stafftype'),
             'dob': request.form.get('staffdob'),
             'fileNumber': request.form.get('fileNumber'),
             'department': request.form.get('department'),
             'staffdateoffirstapt': request.form.get('staffdofa'),
-            'dateoffirstapt': request.form.get('staffdofa'),
             'phone': request.form.get('staffpno'),
             'staffippissNumber': request.form.get('staffippissNumber'),
             'staffrank': request.form.get('staffrank'),
             'staffsalgrade': request.form.get('staffsalgrade'),
             'staffdateofpresentapt': request.form.get('staffdopa'),
-            'staffgender': request.form.get('gender'),
+            'staffgender': request.form.get('staffgender'),
             'stafforigin': request.form.get('stafforigin'),
             'localgovorigin': request.form.get('localgovorigin'),
-            'qualification': request.form.get('qualification')
+            'qualification': request.form.get('qualification'),
+            'confirmation_status': confirmation_status
         }
       
         permanent_staff = mongo.db.permanent_staff.insert_one(staff)
@@ -101,7 +130,41 @@ def staff():
             flash('Failed to add Permanent staff. Please try again.', 'danger')
     return render_template('add_staff.html', title='Add Permanent and Pensionable')
 
+@app.route('/confirm_staff/<string:staff_id>', methods=['GET', 'POST'])
+@admin_required
+@login_required
+def confirm_staff(staff_id):
+    userbysession = session.get('email')
+    current_user = mongo.db.user.find_one({'email': userbysession})
+    staff = mongo.db.permanent_staff.find_one({'staff_id': staff_id})
+    if not staff:
+        flash('Staff not found', 'error')
+        return redirect(url_for('table_list'))
+    staff_date_of_first_appointment = datetime.strptime(staff['staffdateoffirstapt'], '%Y-%m-%d')
+    two_years = timedelta(days=730)
+    current_time = datetime.utcnow()
+    if current_time - staff_date_of_first_appointment > two_years:
+        if staff['confirmation_status'] == 'unconfirmed':
+            if request.method == 'POST':
+                mongo.db.permanent_staff.update_one(
+                    {'staff_id': staff_id},
+                    {'$set': {'confirmation_status': 'confirmed'}}
+                    )
+                flash('Staff confirmed successfully!', 'success')
+                return redirect(url_for('Confirmation'))
+        else:
+            flash('Staff is already confirmed', 'info')
+            return redirect(url_for('Confirmation'))
+        return render_template('confirm_staff.html', title='Confirm Staff', staff=staff)
+    else:
+        remaining_days = (staff_date_of_first_appointment + two_years - current_time).days
+        flash(f'Staff is not due for confirmation. {remaining_days} days remaining', 'info')
+        return redirect(url_for('Confirmaton'))
+        
+            
+            
 @app.route('/edit_staff/<string:staff_id>', methods=['GET', 'POST'])
+@admin_required
 @login_required
 def edit_staff(staff_id):
     userbysession = session.get('email')
@@ -138,6 +201,7 @@ def edit_staff(staff_id):
             return redirect(url_for('table_list'))
     return render_template('edit_staff.html', title='Edit Staff', staff=staff)
 @app.route('/delete_staff/<string:staff_id>', methods=['GET', 'POST'])
+@admin_required
 @login_required
 def delete_staff(staff_id):
     userbysession = session.get('email')
@@ -161,11 +225,32 @@ def table_list():
     permanent_staff_list = mongo.db.permanent_staff.find()
     return render_template('list.html', title='List of Permanent and Pensionable', staff=permanent_staff_list)
 
+from datetime import datetime, timedelta
+
 @app.route('/Confirmation', methods=['GET', 'POST'])
 @login_required
 def confirmation():
-    """Confirmation"""
-    return render_template('confirmation.html', title='Confirmation')
+    currenttime = datetime.now()
+    two_years_ago = currenttime - timedelta(days=730)
+    
+    eligible_staff = list(mongo.db.permanent_staff.find({
+        'staffdateoffirstapt': {'$lt': two_years_ago.strftime('%Y-%m-%d')},
+        'confirmation_status': 'unconfirmed'
+    }))
+    
+    pending_staff = list(mongo.db.permanent_staff.find({
+        'confirmation_status': 'unconfirmed',
+        'staffdateoffirstapt': {'$gte': two_years_ago.strftime('%Y-%m-%d')}
+    }))
+    
+    # Calculate remaining days for pending staff
+    for staff in pending_staff:
+        dofa = datetime.strptime(staff['staffdateoffirstapt'], '%Y-%m-%d')
+        staff['days_remaining'] = ((dofa + timedelta(days=730)) - currenttime).days
+    
+    return render_template('confirmation.html', title='Confirmation', 
+                           eligible_staff=eligible_staff, pending_staff=pending_staff, 
+                           currenttime=currenttime)
 
 @app.route('/Promotion', methods=['GET', 'POST'])
 @login_required
@@ -198,6 +283,7 @@ def add_lcm():
         if lcm_staff:
             print('LCM staff added successfully!')
             flash('LCM staff added successfully!', 'success')
+            return redirect(url_for('list_Lcm'))
         else:
             print('Failed to add LCM staff. Please try again.', 'danger')
             flash('Failed to add LCM staff. Please try again.', 'danger')
@@ -211,6 +297,7 @@ def list_Lcm():
     return render_template('list_lcm.html', title='List of Locum Staffs', staff=lcm_staff_list)
 
 @app.route('/edit_lcmstaff/<string:staff_id>', methods=['GET', 'POST'])
+@admin_required
 @login_required
 def edit_lcmstaff(staff_id):
     """This helps edit staff"""
@@ -244,6 +331,7 @@ def edit_lcmstaff(staff_id):
         return redirect(url_for('list_Lcm'))
     return render_template('edit_lcmstaff.html', title="Edit LCM Staff", staff=staff)
 @app.route('/delete_lcmstaff/<string:staff_id>', methods=['GET', 'POST'])
+@admin_required
 @login_required
 def delete_lcmstaff(staff_id):
     """This helps delete staff"""
@@ -263,10 +351,13 @@ def delete_lcmstaff(staff_id):
         
 @app.route('/AddUser', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def add_user():
     """Add user"""
+    users = mongo.db.user.find()
     if request.method == 'POST':
         email = request.form.get('staffemail')
+        role = request.form.get('role')
         username = request.form.get('username')
         filenumber = request.form.get('filenumber')
         staffphone = request.form.get('staffpno')
@@ -285,18 +376,31 @@ def add_user():
         new_user = {
             'email': email,
             'username': username,
+            'role': role, 
             'filenumber': filenumber,
             'staffphone': staffphone,
             'department': department,
             'password': hashed_password
         }
-
-        user = mongo.db.user.insert_one(new_user)
-        print(f'User added: {user}')
-        return redirect(url_for('dashboard'))
+        for user in users:
+            if user['email'] == email:
+                flash('User already exists', 'danger')
+                print('User already exists')
+                return redirect(url_for('add_user'))
+        else:
+            flash('User added successfully', 'success')
+            user = mongo.db.user.insert_one(new_user)
+            print(f'User added: {user}')
+            return redirect(url_for('dashboard'))
 
     return render_template('add_user.html', title='Add User')
-
+@app.route('/userlist', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def user_list():
+    """List of Users"""
+    users = mongo.db.user.find()
+    return render_template('user_list.html', title='List of Users', users=users)
 def log_reports(action, staff_id, details):
     """Log reports"""
     current_time = datetime.utcnow()

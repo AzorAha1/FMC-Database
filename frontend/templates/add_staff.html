@@ -38,13 +38,13 @@
                             <input placeholder="Enter Date of Birth" class="form-control smaller" type="text" id="staffdob" name="staffdob" onfocus="(this.type='date')" onblur="(this.type='text')" required/>
                         </div>
                         <div class="form-group">
-                            <input type="number" placeholder="Phone Number" id="staffpno" name="staffpno" required>
+                            <input type="number" class="form-control" id="staffpno" name="staffpno" placeholder="Phone Number" required>
                         </div>
                         <div class="form-group">
-                            <select id="staffType" class="form-control" required>
-                                <option value="">Choose Staff Type</option>
-                                <option value="SSA">Senior Staff (SSA)</option>
-                                <option value="JSA">Junior Staff (JSA)</option>
+                            <select name="staffgender" id="staffgender" class="form-control" required>
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -68,10 +68,10 @@
                             <input placeholder="Enter Date of Present Appointment" class="form-control smaller" type="text" id="staffdopa" name="staffdopa" onfocus="(this.type='date')" onblur="(this.type='text')" required/>
                         </div>
                         <div class="form-group">
-                            <select name="gender" id="staffgender" class="form-control" required>
-                                <option value="">Select Gender</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
+                            <select name="stafftype" id="stafftype" class="form-control" required>
+                                <option value="">Select Staff Type</option>
+                                <option value="JSA">JSA</option>
+                                <option value="SSA">SSA</option>
                             </select>
                         </div>
                         <div class="form-group">

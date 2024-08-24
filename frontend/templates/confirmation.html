@@ -7,7 +7,6 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" rel="stylesheet">
     <link rel="stylesheet" href="../statics/css/dashboard.css">
-   
 </head>
 <body>
     {% include 'header.html' %} 
@@ -17,7 +16,7 @@
             <br>
            <a href="{{ url_for('table_list') }}">
             <h3>
-              <i class="fas fa-list"></i> {{title}}
+              <i class="fas fa-list"></i> {{ title }}
             </h3>
             </a> 
             <div class="container-box">
@@ -26,35 +25,49 @@
                         <input type="date" class="form-control w-25">
                         <input type="text" id="searchInput" class="form-control w-25 " placeholder="Search...">
                     </div>
-                    <table class="table table-bordered table-hover">
+                    <h2>Eligible for Confirmation</h2>
+                    <table class="table">
                         <thead>
                             <tr>
-                                <th>#</th>
-                                <th>File_NO</th>
-                                <th>IPPIS No</th>
                                 <th>Name</th>
-                                <th>D O B</th>
-                                <th>Department</th>
-                                <th>DOFA</th>
-                                <th>DOPA</th>
-                                <th>Actions</th>
+                                <th>File Number</th>
+                                <th>Date of First Appointment</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody id="staffTable">
-                            <!-- Example row. In a real application, rows will be generated dynamically from data -->
+                        <tbody>
+                            {% for staff in eligible_staff %}
                             <tr>
-                                <td>1</td>
-                                <td>JSA 194</td>
-                                <td>173421</td>
-                                <td>Aliyu Abubakar</td>
-                                <td>24/02/2002</td> 
-                                <td>It Unit</td>
-                                <td>24/02/2024</td> 
-                                <td>24/02/2024</td> 
+                                <td>{{ staff.firstName }} {{ staff.lastName }}</td>
+                                <td>{{ staff.fileNumber }}</td>
+                                <td>{{ staff.staffdateoffirstapt }}</td>
                                 <td>
-                                   <b style="color: red;">Not confirmed</b>                                    
+                                    <a href="{{ url_for('confirm_staff', staff_id=staff.staff_id) }}" class="btn btn-primary">Confirm</a>
                                 </td>
-                            </tr> 
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    
+                    <h2>Pending Confirmation</h2>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>File Number</th>
+                                <th>Date of First Appointment</th>
+                                <th>Days Remaining</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for staff in pending_staff %}
+                            <tr>
+                                <td>{{ staff.firstName }} {{ staff.lastName }}</td>
+                                <td>{{ staff.fileNumber }}</td>
+                                <td>{{ staff.staffdateoffirstapt }}</td>
+                                <td>{{ staff.days_remaining }}</td>
+                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                     <nav>
@@ -64,10 +77,6 @@
                     </nav>
                 </div>
             </div>
-        </div>
-
-    </div>
-
         </div>
     </div>
     {% include 'footer.html' %} 

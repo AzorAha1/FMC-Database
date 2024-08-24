@@ -22,42 +22,37 @@
             <div class="container-box">
                 <div class="container mt-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <a href="{{ url_for('add_lcm') }}"><button class="btn btn-info btn-sm"><i class="fas fa-plus"></i> Add Staff</button></a>
+                        <a href="{{ url_for('add_user') }}"><button class="btn btn-info btn-sm"><i class="fas fa-plus"></i> Add User</button></a>
                         <input type="text" id="searchInput" class="form-control w-25 " placeholder="Search...">
                     </div>
                     <table class="table table-bordered table-hover">
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>File_NO</th> 
-                                <th>Name</th>
-                                <th>D O B</th>
+                                <th>File_NO</th>
+                                <th>E-Mail</th> 
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Phone Number</th>
                                 <th>Department</th>
-                                <th>DOFA</th>
-                                {% if session.get('role') == 'admin-user'%}
-                                    <th>Actions</th>
-                                {% endif %}
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="staffTable">
-                            {% for staff_member in staff %}
+                            {% for user in users %}
                             <tr>
                                 <td>{{ loop.index }}</td>
-                                <td>{{ staff_member.fileNumber }}</td>
-                                <td>{{ staff_member.firstName }} {{ staff_member.midName }} {{ staff_member.lastName }}</td>
-                                <td>{{ staff_member.dob }}</td>
-                                <td>{{ staff_member.department }}</td>
-                                <td>{{ staff_member.dateOfApt }}</td>
-                                {% if session.get('role') == 'admin-user'%}
-                                    <td>
-                                        <a href="{{ url_for('edit_lcmstaff', staff_id=staff_member.lcmstaff_id) }}" class="btn btn-warning btn-sm">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="{{ url_for('delete_lcmstaff', staff_id=staff_member.lcmstaff_id) }}" class="btn btn-danger btn-sm">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </td>
-                                {% endif %}
+                                <td>{{ user.filenumber }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.role }}</td>
+                                <td>{{ user.staffphone }}</td>
+                                <td>{{ user.department }}</td>
+                                <td>
+                                    <a href="" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>                        

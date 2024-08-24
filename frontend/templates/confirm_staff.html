@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Confirm Staff</h1>
+<p>Are you sure you want to confirm {{ staff.firstName }} {{ staff.lastName }}?</p>
+<form method="POST">
+    <button type="submit" class="btn btn-primary">Confirm</button>
+    <a href="{{ url_for('confirmation') }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}
