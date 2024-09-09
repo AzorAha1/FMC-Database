@@ -41,19 +41,20 @@
             </ul>
         </li>
         {% if session.get('role') == 'admin-user' %}   
-          <li>
-            <i class="fa fa-users"></i><a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Manage Users</a>
-              <ul class="collapse list-unstyled" id="pageSubmenu">
-                  <li>
-                    <i class="fa fa-plus"></i>  <a href="{{ url_for('add_user') }}">Add user</a>
-                  </li>
-                  <li>
-                    <i class="fa fa-list"></i>  <a href="{{ url_for('user_list') }}">User Table</a>
-                  </li>
-              </ul>
-              
-          </li>
+          
         {% endif %}
+        <li>
+          <i class="fa fa-users"></i><a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Manage Users</a>
+            <ul class="collapse list-unstyled" id="pageSubmenu">
+                <li>
+                  <i class="fa fa-plus"></i>  <a href="{{ url_for('add_user') }}">Add user</a>
+                </li>
+                <li>
+                  <i class="fa fa-list"></i>  <a href="{{ url_for('user_list') }}">User Table</a>
+                </li>
+            </ul>
+            
+        </li>
         <li>
           <i class="fa fa-sign-out-alt"></i><a href="{{ url_for('logout') }}">Logout</a>
         </li>

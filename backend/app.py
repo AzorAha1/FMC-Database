@@ -62,7 +62,7 @@ def login():
     return render_template('login.html', title='Login')
 
 @app.route('/dashboard', methods=['GET', 'POST'])
-@login_required
+# @login_required
 def dashboard():
     print('Session:', session)
     """dashboard file"""
@@ -350,8 +350,8 @@ def delete_lcmstaff(staff_id):
     return render_template('delete_lcmstaff.html', title='Delete LCM Staff', staff=staff)
         
 @app.route('/AddUser', methods=['GET', 'POST'])
-@login_required
-@admin_required
+# @login_required
+# @admin_required
 def add_user():
     """Add user"""
     users = mongo.db.user.find()

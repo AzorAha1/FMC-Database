@@ -25,11 +25,9 @@
                         <label for="password">Password</label>
                         <div class="input-icon">
                             <i class="fas fa-lock"></i>
-                            <input type="password" id="password" name="password" autocomplete="off" required>
+                            <input type="password" id="loginPassword" name="password" required>
                         </div>
-                        <small id="passwordHelp" class="form-text text-muted">
-                            Password must be at least 8 characters long and contain letters, numbers, and special characters.
-                        </small>
+                        <small id="passwordHelp" class="form-text text-muted"></small>
                     </div>
                     <button type="submit">SIGN IN <i class="fa fa-arrow-right"></i></button>
                 </form>
@@ -40,5 +38,8 @@
         <div class="spinner"></div>
     </div>
     <script src="../statics/js/script.js"></script>
+    <script>
+        document.getElementById('loginPassword').addEventListener('input', validatePassword)
+    </script>
 </body>
 </html>
