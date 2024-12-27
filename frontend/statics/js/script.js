@@ -47,7 +47,6 @@ function validatePassword() {
             confirmPasswordHelp.style.color = 'green';
         }
     }
-
     return valid;
 }
 

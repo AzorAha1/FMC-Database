@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 from datetime import timedelta, datetime
+from flask_cors import CORS
+
 from functools import wraps
 from unittest import result
 import bcrypt
@@ -7,12 +9,20 @@ from bson import ObjectId
 from flask import Flask, flash, render_template, request, redirect, url_for, session, jsonify
 from flask_pymongo import DESCENDING, PyMongo
 import uuid
+from flask import make_response
 
 
 app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/statics')
 app.secret_key = 'secretkeyforfmcdatabase'
 app.config['MONGO_URI'] = 'mongodb://localhost:27017/fmc-database'
 app.permanent_session_lifetime = timedelta(hours=1)
+app.config['CORS_HEADERS'] = 'Content-Type'
+CORS(app, 
+    origins="http://localhost:5173",
+    allow_credentials=True,
+    supports_credentials=True
+)
+
 mongo = PyMongo(app)
 
 def login_required(func):
@@ -35,49 +45,118 @@ def confirmationofstaff():
     """"this function checks for the confirmation of staff"""
     dateoffirstapt = mongo.db.permenant_staff.find_one({'staffdateoffirstapt': 'staffdofa'})
     print(dateoffirstapt)
+
+# @app.route('/login', methods=['GET', 'POST'])
+# old login endpoint 
+# def login():
+#     """index file"""
+#     if request.method == 'POST':
+#         email = request.form.get('email')
+#         password = request.form.get('password')
+#         user_collection = mongo.db.user
+
+#         # Check if the user exists
+#         user = user_collection.find_one({'email': email})
+#         if user:
+#             # Check if the password is correct
+#             if bcrypt.checkpw(password.encode('utf-8'), user['password']):
+#                 session['email'] = email
+#                 session['role'] = user.get('role')
+#                 return redirect(url_for('dashboard'))
+#             else:
+#                 flash('Invalid email or password', 'danger')
+#                 return redirect(url_for('login'))
+#         else:
+#             flash('Invalid email or password', 'danger')
+#             return redirect(url_for('login'))
+
+#     return render_template('login.html', title='Login')
+
+@app.route('/api/test', methods=['GET'])
+def test():
+    return jsonify({"message": "Test successful"})
 @app.route('/', methods=['GET'])
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/api/login', methods=['POST', 'GET'])
 def login():
-    """index file"""
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        user_collection = mongo.db.user
+    if request.method == 'OPTIONS':
+        # Handle preflight request
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', 'http://localhost:5173')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'POST,GET,OPTIONS')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        return response
 
-        # Check if the user exists
-        user = user_collection.find_one({'email': email})
-        if user:
-            # Check if the password is correct
-            if bcrypt.checkpw(password.encode('utf-8'), user['password']):
-                session['email'] = email
-                session['role'] = user.get('role')
-                return redirect(url_for('dashboard'))
-            else:
-                flash('Invalid email or password', 'danger')
-                return redirect(url_for('login'))
-        else:
-            flash('Invalid email or password', 'danger')
-            return redirect(url_for('login'))
+    data = request.json
+    email = data.get('email')
+    password = data.get('password')
+    role = data.get('role')
 
-    return render_template('login.html', title='Login')
+    user_collection = mongo.db.user
+    user = user_collection.find_one({'email': email})
+    
+    if user and bcrypt.checkpw(password.encode('utf-8'), user['password']):
+        if user.get('role') == 'admin-user' or user.get('role') == role:
+            session['email'] = email
+            session['role'] = role
+            response = jsonify({
+                'success': True, 
+                'redirectUrl': url_for('dashboard'),
+                'user': {
+                    'email': email,
+                    'role': role,
+                    'isAdmin': user.get('role') == 'admin-user'
+                }
+            })
+            # Add CORS headers to the response
+            response.headers.add('Access-Control-Allow-Origin', 'http://localhost:5173')
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
+            return response
 
-@app.route('/dashboard', methods=['GET', 'POST'])
-# @login_required
+        return jsonify({
+            'success': False, 
+            'message': 'You do not have permission for this role'
+        }), 403
+            
+    return jsonify({
+        'success': False, 
+        'message': 'Invalid email or password'
+    }), 401
+
+# old endpoint for dashboard
+# @app.route('/dashboard', methods=['GET', 'POST'])
+# # @login_required
+# def dashboard():
+#     print('Session:', session)
+#     """dashboard file"""
+#     lcm_staff_count = mongo.db.lcm_staff.count_documents({})
+#     total_permenentstaff_count = mongo.db.permanent_staff.count_documents({})
+#     allstaffscount = lcm_staff_count + total_permenentstaff_count
+#     total_users = mongo.db.user.count_documents({})
+#     confirmationofstaff()
+#     return render_template('dashboard.html',
+#                            title='Dashboard',
+#                            lcm_staff_count=lcm_staff_count,
+#                            total_permenentstaff_count=total_permenentstaff_count,
+#                            allstaffscount=allstaffscount,
+#                            total_users=total_users
+#                            )
+
+# new dashboard endpoint
+@app.route('/api/dashboard', methods=['GET', 'POST'])
 def dashboard():
-    print('Session:', session)
-    """dashboard file"""
     lcm_staff_count = mongo.db.lcm_staff.count_documents({})
     total_permenentstaff_count = mongo.db.permanent_staff.count_documents({})
     allstaffscount = lcm_staff_count + total_permenentstaff_count
     total_users = mongo.db.user.count_documents({})
-    confirmationofstaff()
-    return render_template('dashboard.html',
-                           title='Dashboard',
-                           lcm_staff_count=lcm_staff_count,
-                           total_permenentstaff_count=total_permenentstaff_count,
-                           allstaffscount=allstaffscount,
-                           total_users=total_users
-                           )
+    
+    return jsonify({
+        'lcmStaffCount': lcm_staff_count,
+        'permanentStaffCount': total_permenentstaff_count,
+        'allStaffCount': allstaffscount,
+        'totalUsers': total_users
+    })
+
 @app.route('/addstaff', methods=['GET', 'POST'])
 @login_required
 def staff():
@@ -428,5 +507,5 @@ def logout():
     return redirect(url_for('login'))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5003, host='0.0.0.0')
 
