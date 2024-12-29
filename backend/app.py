@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 from datetime import timedelta, datetime
 from flask_cors import CORS
+from bson import json_util
 
 from functools import wraps
 from unittest import result
@@ -157,57 +158,105 @@ def dashboard():
         'totalUsers': total_users
     })
 
-@app.route('/addstaff', methods=['GET', 'POST'])
-@login_required
-def staff():
-    """Add Staff"""
-    print(session)
-    unique_id = str(uuid.uuid4())
-    print(unique_id)
-    user_email = session.get('email')
-    user = mongo.db.user.find_one({'email': user_email})
-    if not user:
-        return redirect(url_for('login'))
-    if request.method == 'POST':
-        two_years = timedelta(days=730)
-        current_time = datetime.utcnow()
-        staff_date_of_first_appointment = datetime.strptime(request.form.get('staffdofa'), '%Y-%m-%d')
-        if current_time - staff_date_of_first_appointment > two_years:
-            confirmation_status = 'confirmed'
-        else:
-            confirmation_status = 'unconfirmed'
-        staff = {
-            'staff_id': unique_id,
-            'firstName': request.form.get('stafffirstName'),
-            'midName': request.form.get('staffmidName'),
-            'lastName': request.form.get('stafflastName'),
-            'stafftype': request.form.get('stafftype'),
-            'dob': request.form.get('staffdob'),
-            'fileNumber': request.form.get('fileNumber'),
-            'department': request.form.get('department'),
-            'staffdateoffirstapt': request.form.get('staffdofa'),
-            'phone': request.form.get('staffpno'),
-            'staffippissNumber': request.form.get('staffippissNumber'),
-            'staffrank': request.form.get('staffrank'),
-            'staffsalgrade': request.form.get('staffsalgrade'),
-            'staffdateofpresentapt': request.form.get('staffdopa'),
-            'staffgender': request.form.get('staffgender'),
-            'stafforigin': request.form.get('stafforigin'),
-            'localgovorigin': request.form.get('localgovorigin'),
-            'qualification': request.form.get('qualification'),
-            'confirmation_status': confirmation_status
-        }
+# old endpoint for add staff
+# @app.route('/addstaff', methods=['GET', 'POST'])
+# @login_required
+# def staff():
+#     """Add Staff"""
+#     print(session)
+#     unique_id = str(uuid.uuid4())
+#     print(unique_id)
+#     user_email = session.get('email')
+#     user = mongo.db.user.find_one({'email': user_email})
+#     if not user:
+#         return redirect(url_for('login'))
+#     if request.method == 'POST':
+#         two_years = timedelta(days=730)
+#         current_time = datetime.utcnow()
+#         staff_date_of_first_appointment = datetime.strptime(request.form.get('staffdofa'), '%Y-%m-%d')
+#         if current_time - staff_date_of_first_appointment > two_years:
+#             confirmation_status = 'confirmed'
+#         else:
+#             confirmation_status = 'unconfirmed'
+#         staff = {
+#             'staff_id': unique_id,
+#             'firstName': request.form.get('stafffirstName'),
+#             'midName': request.form.get('staffmidName'),
+#             'lastName': request.form.get('stafflastName'),
+#             'stafftype': request.form.get('stafftype'),
+#             'dob': request.form.get('staffdob'),
+#             'fileNumber': request.form.get('fileNumber'),
+#             'department': request.form.get('department'),
+#             'staffdateoffirstapt': request.form.get('staffdofa'),
+#             'phone': request.form.get('staffpno'),
+#             'staffippissNumber': request.form.get('staffippissNumber'),
+#             'staffrank': request.form.get('staffrank'),
+#             'staffsalgrade': request.form.get('staffsalgrade'),
+#             'staffdateofpresentapt': request.form.get('staffdopa'),
+#             'staffgender': request.form.get('staffgender'),
+#             'stafforigin': request.form.get('stafforigin'),
+#             'localgovorigin': request.form.get('localgovorigin'),
+#             'qualification': request.form.get('qualification'),
+#             'confirmation_status': confirmation_status
+#         }
       
-        permanent_staff = mongo.db.permanent_staff.insert_one(staff)
+#         permanent_staff = mongo.db.permanent_staff.insert_one(staff)
 
-        if permanent_staff:
-            print('Permanent staff added successfully!')
-            flash('Permanent staff added successfully!', 'success')
-            return redirect(url_for('table_list'))
-        else:
-            print('Failed to add Permanent staff. Please try again.', 'danger')
-            flash('Failed to add Permanent staff. Please try again.', 'danger')
-    return render_template('add_staff.html', title='Add Permanent and Pensionable')
+#         if permanent_staff:
+#             print('Permanent staff added successfully!')
+#             flash('Permanent staff added successfully!', 'success')
+#             return redirect(url_for('table_list'))
+#         else:
+#             print('Failed to add Permanent staff. Please try again.', 'danger')
+#             flash('Failed to add Permanent staff. Please try again.', 'danger')
+#     return render_template('add_staff.html', title='Add Permanent and Pensionable')
+
+# new add staff endpoint
+@app.route('/api/add_staff', methods=['POST'])
+def add_staff():
+    data = request.get_json()
+    unique_id = str(uuid.uuid4())
+    two_years = timedelta(days=730)
+    current_time = datetime.utcnow()
+    staff_date_of_first_appointment = datetime.strptime(data['staffdofa'], '%Y-%m-%d')
+    if current_time - staff_date_of_first_appointment > two_years:
+        confirmation_status = 'confirmed'
+    else:
+        confirmation_status = 'unconfirmed'
+    
+    staff = {
+        'staff_id': unique_id,
+        'firstName': data['stafffirstName'],
+        'midName': data['staffmidName'],
+        'lastName': data['stafflastName'],
+        'stafftype': data['stafftype'],
+        'dob': data['staffdob'],
+        'fileNumber': data['fileNumber'],
+        'department': data['department'],
+        'staffdateoffirstapt': data['staffdofa'],
+        'phone': data['staffpno'],
+        'staffippissNumber': data['staffippissNumber'],
+        'staffrank': data['staffrank'],
+        'staffsalgrade': data['staffsalgrade'],
+        'staffdateofpresentapt': data['staffdopa'],
+        'staffgender': data['staffgender'],
+        'stafforigin': data['stafforigin'],
+        'localgovorigin': data['localgovorigin'],
+        'qualification': data['qualification'],
+        'confirmation_status': confirmation_status
+    }
+    permanent_staff = mongo.db.permanent_staff.insert_one(staff)
+
+    if permanent_staff:
+        return jsonify({
+            'success': True,
+            'message': 'Permanent staff added successfully!'
+        }), 201
+    else:
+        return jsonify({
+            'success': False,
+            'message': 'Failed to add Permanent staff. Please try again.'
+        }), 400
 
 @app.route('/confirm_staff/<string:staff_id>', methods=['GET', 'POST'])
 @admin_required
@@ -492,12 +541,20 @@ def log_reports(action, staff_id, details):
     }
     print(report)
     mongo.db.reports.insert_one(report)
-@app.route('/reports', methods=['GET', 'POST'])
-@login_required
+
+# old endpoint for reports
+# @app.route('/reports', methods=['GET', 'POST'])
+# @login_required
+# def reports():
+#     """Reports"""
+#     reports = mongo.db.reports.find().sort('date', DESCENDING)
+#     return render_template('reports.html', title='Reports', reports=reports)
+
+# new reports endpoint
+@app.route('/api/reports', methods=['GET', 'POST'])
 def reports():
-    """Reports"""
-    reports = mongo.db.reports.find().sort('date', DESCENDING)
-    return render_template('reports.html', title='Reports', reports=reports)
+    reports = list(mongo.db.reports.find().sort('date', DESCENDING))
+    return json_util.dumps({'reports': reports})
 @app.route('/logout', methods=['GET'])
 def logout():
     """Logout"""

@@ -1,179 +1,168 @@
-import React, { useState } from 'react'; // Add useState
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome, faTachometerAlt, faFileInvoiceDollar, faStethoscope, faClinicMedical, faBed, faPaperPlane, faArrowLeft, faArrowRight, faArrowDown, faArrowRightRotate, faUserAlt, faCodePullRequest, faAd, faAdd, faUserEdit, faBedPulse, faUserDoctor, faUserNurse, faList } from '@fortawesome/free-solid-svg-icons';
-import { faHospitalAlt } from '@fortawesome/free-regular-svg-icons/faHospitalAlt';
-import { useNavigate } from 'react-router-dom'
+import {
+    faChartLine,
+    faChartBar,
+    faUserPlus,
+    faList,
+    faStethoscope,
+    faCheckCircle,
+    faArrowUp,
+    faUsers,
+    faChevronDown,
+    faChevronRight,
+    faSignOutAlt,
+    faUserNurse,
+    faUserCog,
+} from '@fortawesome/free-solid-svg-icons';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Sidebar = () => {
-    const [isCollapsed, setIsCollapsed] = useState(false); // State for sidebar collapse
-
-    // States to control the visibility of each submenu
+    const [isCollapsed, setIsCollapsed] = useState(false);
     const [openMenu, setOpenMenu] = useState({
-        himUnit: false,
-        outPatient: false,
-        inPatient: false,
-        directRequest: false,
+        managePermanent: false,
+        manageLocum: false,
+        manageUsers: false,
     });
 
-    const toggleSidebar = () => {
-        setIsCollapsed(!isCollapsed);
-    };
-
     const navigate = useNavigate();
+    const location = useLocation();
 
-    const collapsediteminmenu = (title, icon, endpoint) => {
-        return (
-            <li 
-                className="flex items-center space-x-4 p-2 hover:bg-gray-700 rounded cursor-pointer"
-                onClick={() => endpoint && navigate(endpoint)}
-            >
-                <div className="flex items-center space-x-4">
-                    <FontAwesomeIcon icon={icon} className="text-lg" />
-                    {!isCollapsed && <span>{title}</span>}
-                </div>
-            </li>
-        );
-    };
+    const toggleSidebar = () => setIsCollapsed(!isCollapsed);
 
     const toggleSubMenu = (menu) => {
-        setOpenMenu(prevState => ({
+        setOpenMenu((prevState) => ({
             ...prevState,
             [menu]: !prevState[menu],
         }));
     };
 
+    const isActive = (path) => location.pathname === path;
+
+    const collapsedItemInMenu = (title, icon, endpoint) => (
+        <li
+            className={`flex items-center space-x-4 p-2 rounded cursor-pointer ${
+                isActive(endpoint) ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'
+            }`}
+            onClick={() => endpoint && navigate(endpoint)}
+        >
+            <FontAwesomeIcon icon={icon} className="text-lg" />
+            {!isCollapsed && <span>{title}</span>}
+        </li>
+    );
+
     return (
         <aside
             style={{ backgroundColor: '#1e1e2d' }}
-            className={`h-screen text-white transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-72'}`}
+            className={`h-screen text-white transition-all duration-300 ${
+                isCollapsed ? 'w-20' : 'w-72'
+            }`}
         >
-            {/* Header Section */}
+            {/* Header */}
             <div style={{ backgroundColor: '#1a1a26' }} className="p-4 flex items-center justify-between">
-                {/* Title */}
-                {!isCollapsed && (
-                    <h1 className="text-2xl font-semibold text-blue-400">HealthDis</h1>
-                )}
-
-                {/* Back Icon */}
+                {!isCollapsed && <h1 className="text-lg font-semibold text-blue-400">FMC Human Resources</h1>}
                 <button
-                    className={`text-white hover:text-blue-400 cursor-pointer transition-transform duration-300 ease-in-out ${
-                        isCollapsed ? 'rotate-0' : 'rotate-180'
-                    }`}
+                    className={`text-white hover:text-blue-400 cursor-pointer`}
                     onClick={toggleSidebar}
                 >
-                    <FontAwesomeIcon icon={faArrowRight} className="text-xl" />
+                    <FontAwesomeIcon
+                        icon={isCollapsed ? faChevronRight : faChevronDown}
+                        className="text-xl"
+                    />
                 </button>
             </div>
 
-            {/* Menu Section */}
+            {/* Menu */}
             <ul className="p-4 space-y-4">
-                {/* Dashboard */}
-                <li className="flex items-center space-x-4 p-2 hover:bg-gray-700 rounded">
-                    <FontAwesomeIcon icon={faTachometerAlt} className="text-lg" />
-                    {!isCollapsed && <span>Dashboard</span>}
-                </li>
-                {/* Billing */}
-                <li className="flex items-center space-x-4 p-2 hover:bg-gray-700 rounded">
-                    <FontAwesomeIcon icon={faFileInvoiceDollar} className="text-lg" />
-                    {!isCollapsed && <span>Billing</span>}
-                </li>
-                {/* Home */}
-                <li className="flex items-center space-x-4 p-2 hover:bg-gray-700 rounded">
-                    <FontAwesomeIcon icon={faHome} className="text-lg" />
-                    {!isCollapsed && <span>Home</span>}
-                </li>
-                {/* HIM Unit */}
+                {collapsedItemInMenu('Dashboard', faChartLine, '/api/dashboard')}
+                {collapsedItemInMenu('Reports', faChartBar, '/api/reports')}
+
+                {/* Manage Permanent */}
                 <li
                     className="flex items-center justify-between p-2 hover:bg-gray-700 rounded cursor-pointer"
-                    onClick={() => toggleSubMenu('himUnit')} // Toggle HIM Unit submenu
+                    onClick={() => toggleSubMenu('managePermanent')}
+                    aria-expanded={openMenu.managePermanent}
                 >
                     <div className="flex items-center space-x-4">
                         <FontAwesomeIcon icon={faStethoscope} className="text-lg" />
-                        {!isCollapsed && <span>HIM Unit</span>}
+                        {!isCollapsed && <span>Manage Permanent</span>}
                     </div>
                     {!isCollapsed && (
                         <FontAwesomeIcon
-                            icon={faArrowDown}
-                            className={`text-sm transform transition-transform ${openMenu.himUnit ? 'rotate-180' : ''}`}
+                            icon={faChevronDown}
+                            className={`text-sm transform transition-transform ${
+                                openMenu.managePermanent ? 'rotate-180' : ''
+                            }`}
                         />
                     )}
                 </li>
-                {openMenu.himUnit && !isCollapsed && (
+                {openMenu.managePermanent && !isCollapsed && (
                     <ul className="pl-8 space-y-2">
-                        {collapsediteminmenu('HIM Dashboard', faTachometerAlt)}
-                        {collapsediteminmenu('New Patient Enrollment', faUserAlt, '/clinical/new_patient')}
-                        {collapsediteminmenu('Update Patient Record', faArrowRightRotate)}
-                        {collapsediteminmenu('Patients Registered List', faList)}
-                        {collapsediteminmenu('Follow-up Visit', faHospitalAlt)}
+                        {collapsedItemInMenu('Add Staff', faUserPlus, '/api/add_staff')}
+                        {collapsedItemInMenu('List of Staff', faList, '/list_staff')}
+                    </ul>
+                )}
 
-                    </ul>
-                )}
-                {/* Out-Patient Clinic */}
+                {/* Confirmation */}
+                {collapsedItemInMenu('Confirmation', faCheckCircle, '/confirmation')}
+
+                {/* Promotion */}
+                {collapsedItemInMenu('Promotion', faArrowUp, '/promotion')}
+
+                {/* Manage Locum Staffs */}
                 <li
                     className="flex items-center justify-between p-2 hover:bg-gray-700 rounded cursor-pointer"
-                    onClick={() => toggleSubMenu('outPatient')} // Toggle Out-Patient submenu
+                    onClick={() => toggleSubMenu('manageLocum')}
+                    aria-expanded={openMenu.manageLocum}
                 >
                     <div className="flex items-center space-x-4">
-                        <FontAwesomeIcon icon={faClinicMedical} className="text-lg" />
-                        {!isCollapsed && <span>Out-Patient Clinic</span>}
+                        <FontAwesomeIcon icon={faUsers} className="text-lg" />
+                        {!isCollapsed && <span>Manage Locum Staffs</span>}
                     </div>
                     {!isCollapsed && (
                         <FontAwesomeIcon
-                            icon={faArrowDown}
-                            className={`text-sm transform transition-transform ${openMenu.outPatient ? 'rotate-180' : ''}`}
+                            icon={faChevronDown}
+                            className={`text-sm transform transition-transform ${
+                                openMenu.manageLocum ? 'rotate-180' : ''
+                            }`}
                         />
                     )}
                 </li>
-                {openMenu.outPatient && !isCollapsed && (
+                {openMenu.manageLocum && !isCollapsed && (
                     <ul className="pl-8 space-y-2">
-                        {collapsediteminmenu('Doctor Sign-In', faUserDoctor)}
-                        {collapsediteminmenu('Nurse Desk', faUserNurse)}
-                        
+                        {collapsedItemInMenu('Add LCM Staff', faUserNurse, '/add_lcm_staff')}
+                        {collapsedItemInMenu('List of LCM Staff', faList, '/list_lcm_staff')}
                     </ul>
                 )}
-                {/* In-Patient/Wards */}
+
+                {/* Manage Users */}
                 <li
                     className="flex items-center justify-between p-2 hover:bg-gray-700 rounded cursor-pointer"
-                    onClick={() => toggleSubMenu('inPatient')} // Toggle In-Patient submenu
+                    onClick={() => toggleSubMenu('manageUsers')}
+                    aria-expanded={openMenu.manageUsers}
                 >
                     <div className="flex items-center space-x-4">
-                        <FontAwesomeIcon icon={faBed} className="text-lg" />
-                        {!isCollapsed && <span>In-Patient/Wards</span>}
+                        <FontAwesomeIcon icon={faUsers} className="text-lg" />
+                        {!isCollapsed && <span>Manage Users</span>}
                     </div>
                     {!isCollapsed && (
                         <FontAwesomeIcon
-                            icon={faArrowDown}
-                            className={`text-sm transform transition-transform ${openMenu.inPatient ? 'rotate-180' : ''}`}
+                            icon={faChevronDown}
+                            className={`text-sm transform transition-transform ${
+                                openMenu.manageUsers ? 'rotate-180' : ''
+                            }`}
                         />
                     )}
                 </li>
-                {openMenu.inPatient && !isCollapsed && (
+                {openMenu.manageUsers && !isCollapsed && (
                     <ul className="pl-8 space-y-2">
-                        {collapsediteminmenu('Ward Login', faBedPulse)}
+                        {collapsedItemInMenu('Add User', faUserCog, '/add_user')}
+                        {collapsedItemInMenu('User Table', faList, '/user_table')}
                     </ul>
                 )}
-                {/* Direct Request */}
-                <li
-                    className="flex items-center justify-between p-2 hover:bg-gray-700 rounded cursor-pointer"
-                    onClick={() => toggleSubMenu('directRequest')} // Toggle Direct Request submenu
-                >
-                    <div className="flex items-center space-x-4">
-                        <FontAwesomeIcon icon={faPaperPlane} className="text-lg" />
-                        {!isCollapsed && <span>Direct Request</span>}
-                    </div>
-                    {!isCollapsed && (
-                        <FontAwesomeIcon
-                            icon={faArrowDown}
-                            className={`text-sm transform transition-transform ${openMenu.directRequest ? 'rotate-180' : ''}`}
-                        />
-                    )}
-                </li>
-                {openMenu.directRequest && !isCollapsed && (
-                    <ul className="pl-8 space-y-2">
-                        {collapsediteminmenu('New Request', faAdd)}
-                        {collapsediteminmenu('New IGR Request', faUserEdit)}
-                    </ul>
-                )}
+
+                {/* Logout */}
+                {collapsedItemInMenu('Logout', faSignOutAlt, '/logout')}
             </ul>
         </aside>
     );
