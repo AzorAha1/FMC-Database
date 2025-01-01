@@ -7,7 +7,7 @@ from functools import wraps
 from unittest import result
 import bcrypt
 from bson import ObjectId
-from flask import Flask, flash, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, flash, json, render_template, request, redirect, url_for, session, jsonify
 from flask_pymongo import DESCENDING, PyMongo
 import uuid
 from flask import make_response
@@ -34,6 +34,7 @@ def login_required(func):
             return redirect(url_for('login'))
         return func(*args, **kwargs)
     return wrapper
+
 
 def admin_required(func):
     @wraps(func)
@@ -214,37 +215,82 @@ def dashboard():
 # new add staff endpoint
 @app.route('/api/add_staff', methods=['POST'])
 def add_staff():
+    print("add_staff route hit!") 
     data = request.get_json()
+    print(data)
+
+    # Function to validate and parse date fields
+    def parse_date(date_string):
+        if not date_string:
+            return None  # Return None if no date is provided
+        try:
+            return datetime.strptime(date_string, '%Y-%m-%d')  # Parse the date in YYYY-MM-DD format
+        except ValueError:
+            return None  # Return None if parsing fails
+
+  
+
+    # Validate and parse date fields
+    staff_date_of_first_appointment = parse_date(data.get('staffdofa'))
+    staff_date_of_present_appointment = parse_date(data.get('staffdateofpresentapt'))
+    staff_dob = parse_date(data.get('staffdob'))
+
+    # Check if any required date fields are missing or invalid
+    if staff_date_of_first_appointment is None:
+        return jsonify({
+            'success': False,
+            'message': 'Invalid or missing Date of First Appointment (staffdofa). Expected format: YYYY-MM-DD.'
+        }), 400
+    if staff_date_of_present_appointment is None:
+        return jsonify({
+            'success': False,
+            'message': 'Invalid or missing Date of Present Appointment (staffdopa). Expected format: YYYY-MM-DD.'
+        }), 400
+    if staff_dob is None:
+        return jsonify({
+            'success': False,
+            'message': 'Invalid or missing Date of Birth (staffdob). Expected format: YYYY-MM-DD.'
+        }), 400
+    
+
+
+    # Define time constants
     unique_id = str(uuid.uuid4())
     two_years = timedelta(days=730)
     current_time = datetime.utcnow()
-    staff_date_of_first_appointment = datetime.strptime(data['staffdofa'], '%Y-%m-%d')
+
+    # Check the confirmation status based on the Date of First Appointment
     if current_time - staff_date_of_first_appointment > two_years:
         confirmation_status = 'confirmed'
     else:
         confirmation_status = 'unconfirmed'
     
+    # Prepare the staff data
     staff = {
         'staff_id': unique_id,
         'firstName': data['stafffirstName'],
         'midName': data['staffmidName'],
         'lastName': data['stafflastName'],
         'stafftype': data['stafftype'],
-        'dob': data['staffdob'],
+        'dob': staff_dob.strftime('%Y-%m-%d'),  # Save the parsed Date of Birth
         'fileNumber': data['fileNumber'],
         'department': data['department'],
-        'staffdateoffirstapt': data['staffdofa'],
-        'phone': data['staffpno'],
+        'staffdateoffirstapt': staff_date_of_first_appointment.strftime('%Y-%m-%d'),  # Save the parsed Date of First Appointment
+        'staffpno': data['staffpno'],
         'staffippissNumber': data['staffippissNumber'],
         'staffrank': data['staffrank'],
         'staffsalgrade': data['staffsalgrade'],
-        'staffdateofpresentapt': data['staffdopa'],
+        'staffdateofpresentapt': staff_date_of_present_appointment.strftime('%Y-%m-%d'),  # Save the parsed Date of Present Appointment
         'staffgender': data['staffgender'],
         'stafforigin': data['stafforigin'],
         'localgovorigin': data['localgovorigin'],
         'qualification': data['qualification'],
+        'conhessLevel': data['conhessLevel'],
         'confirmation_status': confirmation_status
     }
+    if request.method == 'POST': 
+        print(data)    
+    # Insert into the database
     permanent_staff = mongo.db.permanent_staff.insert_one(staff)
 
     if permanent_staff:
@@ -257,7 +303,6 @@ def add_staff():
             'success': False,
             'message': 'Failed to add Permanent staff. Please try again.'
         }), 400
-
 @app.route('/confirm_staff/<string:staff_id>', methods=['GET', 'POST'])
 @admin_required
 @login_required
@@ -346,13 +391,23 @@ def delete_staff(staff_id):
         redirect(url_for('table_list'))
     return render_template('delete_staff.html', title='Delete Staff', staff=staff)
 
-@app.route('/Listofstaff', methods=['GET', 'POST'])
-@login_required
-def table_list():
-    """List of Staff"""
-    permanent_staff_list = mongo.db.permanent_staff.find()
-    return render_template('list.html', title='List of Permanent and Pensionable', staff=permanent_staff_list)
+# old endpoint for list of staff
+# @app.route('/Listofstaff', methods=['GET', 'POST'])
+# @login_required
+# def table_list():
+#     """List of Staff"""
+#     permanent_staff_list = mongo.db.permanent_staff.find()
+#     return render_template('list.html', title='List of Permanent and Pensionable', staff=permanent_staff_list)
 
+# new list of staff endpoint
+@app.route('/api/liststaffs', methods=['GET', 'POST'])
+def list_staff():
+    permanent_staff_list = list(mongo.db.permanent_staff.find())
+    if not permanent_staff_list:
+        return jsonify({'message': 'No staff found'}), 404
+    else:
+        # Convert MongoDB results to JSON-serializable format
+        return json.loads(json_util.dumps({'staff': permanent_staff_list}))
 from datetime import datetime, timedelta
 
 @app.route('/Confirmation', methods=['GET', 'POST'])

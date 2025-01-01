@@ -1,60 +1,58 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios from './api/axios.js';
 import Sidebar from './Sidebar.jsx';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 const AddStaff = () => {
     const [errors, setErrors] = useState({});
+    const [selectedLevel, setSelectedLevel] = useState('');
+    const [selectedStep, setSelectedStep] = useState('');
+    const staffLevels = {
+        JSA: Array.from({ length: 6 }, (_, i) => i + 1), // CONHESS 1-6
+        SSA: Array.from({ length: 9 }, (_, i) => i + 7)  // CONHESS 7-15
+    };
+
+    const steps = Array.from({ length: 10 }, (_, i) => i + 1); // Steps 1-10
     const [staff, setStaff] = useState({
         firstName: '',
-        midName: '',
+        middleName: '',
         lastName: '',
-        stafftype: '',
-        dob: '',
+        staffType: '',
+        dateOfBirth: '',
         fileNumber: '',
         department: '',
-        staffdateoffirstapt: '',
-        phone: '',
-        staffippissNumber: '',
-        staffrank: '',
-        staffsalgrade: '',
-        staffdateofpresentapt: '',
-        staffgender: '',
-        stafforigin: '',
-        localgovorigin: '',
+        dateOfFirstAppointment: '',
+        dateOfPresentAppointment: '',
+        phoneNumber: '',
+        ippissNumber: '',
+        rank: '',
+        stateOfOrigin: '',
         qualification: '',
-        confirmation_status: ''
+        localGovernment: '',
+        salaryGrade: '',
+        gender: '',
+        conhessLevel: '',
     });
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
 
+    // Staff level configurations
+    // const staffLevels = {
+    //     JSA: Array.from({ length: 6 }, (_, i) => i + 1), // CONHESS 1-6
+    //     SSA: Array.from({ length: 9 }, (_, i) => i + 7)  // CONHESS 7-15
+    // };
     const validateInput = (name, value) => {
         switch(name) {
             case 'firstName':
-                if (!value) {
-                    return 'First Name is required';
-                } else if (!value.trim()) {
-                    return 'First Name cannot be empty';
-                }
-                break;
+                return !value.trim() ? 'First Name is required' : '';
             case 'lastName':
-                if (!value) {
-                    return 'Last Name is required';
-                } else if (!value.trim()) {
-                    return 'Last Name cannot be empty';
-                }
-                break;
-            case 'stafftype':
-                if (!value) {
-                    return 'Staff Type is required';
-                } 
-                break;
-            case 'dob':
-                if (!value) {
-                    return 'Date of Birth is required';
-                }
+                return !value.trim() ? 'Last Name is required' : '';
+            case 'staffType':
+                return !value ? 'Staff Type is required' : '';
+            case 'dateOfBirth':
+                if (!value) return 'Date of Birth is required';
                 const birthDate = new Date(value);
                 const currentDate = new Date();
                 let age = currentDate.getFullYear() - birthDate.getFullYear();
@@ -62,86 +60,42 @@ const AddStaff = () => {
                 if (m < 0 || (m === 0 && currentDate.getDate() < birthDate.getDate())) {
                     age--;
                 }
-                if (age < 18) {
-                    return 'Staff must be at least 18 years old';
-                }
-                break;
+                return age < 18 ? 'Staff must be at least 18 years old' : '';
             case 'fileNumber':
-                if (!value) {
-                    return 'File Number is required';
-                }
-                break;
+                return !value.trim() ? 'File Number is required' : '';
             case 'department':
-                if (!value) {
-                    return 'Department is required';
-                }
-                break;
-            case 'staffdateoffirstapt':
-                if (!value) {
-                    return 'Date of First Appointment is required';
-                }
-                break;
-            case 'phone':
-                if (!value) {
-                    return 'Phone Number is required';
-                }
+                return !value.trim() ? 'Department is required' : '';
+            case 'dateOfFirstAppointment':
+                return !value ? 'Date of First Appointment is required' : '';
+            case 'phoneNumber':
+                if (!value) return 'Phone Number is required';
                 const sanitizedPhone = value.replace(/\D/g, '');
-                if (!/^\d{11}$/.test(sanitizedPhone)) {
-                    return 'Phone number must be 11 digits';
-                }
-                break;
-            case 'staffippissNumber':
-                if (!value) {
-                    return 'IPPISS Number is required';
-                }
-                if (!/^\d+$/.test(value)) {
-                    return 'IPPISS number must contain only digits';
-                }
-                break;
-            case 'staffrank':
-                if (!value) {
-                    return 'Staff Rank is required';
-                }
-                break;
-            case 'staffsalgrade':
-                if (!value) {
-                    return 'Salary Grade is required';
-                }
-                break;
-            case 'staffdateofpresentapt':
-                if (!value) {
-                    return 'Date of Present Appointment is required';
-                }
-                break;
-            case 'staffgender':
-                if (!value) {
-                    return 'Gender is required';
-                }
-                break;
-            case 'stafforigin':
-                if (!value) {
-                    return 'State of Origin is required';
-                }
-                break;
-            case 'localgovorigin':
-                if (!value) {
-                    return 'Local Government of Origin is required';
-                }
-                break;
+                return !/^\d{11}$/.test(sanitizedPhone) ? 'Phone number must be 11 digits' : '';
+            case 'ippissNumber':
+                if (!value) return 'IPPISS Number is required';
+                return !/^\d+$/.test(value) ? 'IPPISS number must contain only digits' : '';
+            case 'rank':
+                return !value.trim() ? 'Staff Rank is required' : '';
+            case 'salaryGrade':
+                return !value.trim() ? 'Salary Grade is required' : '';
+            case 'dateOfPresentAppointment':
+                return !value ? 'Date of Present Appointment is required' : '';
+            case 'gender':
+                return !value ? 'Gender is required' : '';
+            case 'stateOfOrigin':
+                return !value.trim() ? 'State of Origin is required' : '';
+            case 'localGovernment':
+                return !value.trim() ? 'Local Government is required' : '';
             case 'qualification':
-                if (!value) {
-                    return 'Qualification is required';
-                }
-                break;
-            case 'confirmation_status':
-                if (!value) {
-                    return 'Confirmation Status is required';
-                }
-                break;
+                return !value.trim() ? 'Qualification is required' : '';
+            case 'staffLevel':
+                return !value ? 'Staff Level is required' : '';
+            case 'staffStep':
+                return !value ? 'Staff Step is required' : '';
+            
             default:
                 return '';
         }
-        return '';
     };
 
     const handleChange = (e) => {
@@ -151,7 +105,6 @@ const AddStaff = () => {
             [name]: value
         }));
 
-        // Validate on change
         const error = validateInput(name, value);
         setErrors(prevErrors => ({
             ...prevErrors,
@@ -183,29 +136,50 @@ const AddStaff = () => {
         setSuccess(null);
 
         try {
-            const response = await axios.post('/api/add_staff', staff);
+            // Transform the data to match your API expectations
+            const apiData = {
+                stafffirstName: staff.firstName,
+                staffmidName: staff.middleName,
+                stafflastName: staff.lastName,
+                stafftype: staff.staffType,
+                staffdob: staff.dateOfBirth,
+                fileNumber: staff.fileNumber,
+                department: staff.department,
+                staffdofa: staff.dateOfFirstAppointment, 
+                staffdateofpresentapt: staff.dateOfPresentAppointment, 
+                staffpno: staff.phoneNumber,
+                staffippissNumber: staff.ippissNumber,
+                staffrank: staff.rank,
+                stafforigin: staff.stateOfOrigin,
+                qualification: staff.qualification,
+                localgovorigin: staff.localGovernment,
+                staffsalgrade: staff.salaryGrade,
+                staffgender: staff.gender,
+                conhessLevel: staff.conhessLevel,
+            };
+
+            const response = await axios.post('/api/add_staff', apiData);
+            
             if (response.data.success) {
                 setSuccess('Staff added successfully');
-                // Reset form
                 setStaff({
                     firstName: '',
-                    midName: '',
+                    middleName: '',
                     lastName: '',
-                    stafftype: '',
-                    dob: '',
+                    staffType: '',
+                    dateOfBirth: '',
                     fileNumber: '',
                     department: '',
-                    staffdateoffirstapt: '',
-                    phone: '',
-                    staffippissNumber: '',
-                    staffrank: '',
-                    staffsalgrade: '',
-                    staffdateofpresentapt: '',
-                    staffgender: '',
-                    stafforigin: '',
-                    localgovorigin: '',
+                    dateOfFirstAppointment: '',
+                    dateOfPresentAppointment: '',
+                    phoneNumber: '',
+                    ippissNumber: '',
+                    rank: '',
+                    stateOfOrigin: '',
                     qualification: '',
-                    confirmation_status: ''
+                    localGovernment: '',
+                    salaryGrade: '',
+                    gender: '',
                 });
             } else {
                 setError(response.data.message || 'An unknown error occurred');
@@ -219,10 +193,10 @@ const AddStaff = () => {
     };
 
     return (
-        <div className='flex justify-center min-h-screen bg-gray-50'>
+        <div className="flex justify-center min-h-screen bg-gray-50">
             <Sidebar />
-            <div className='flex-1 p-6 max-w-7xl mx-auto'>
-                <h1 className='text-3xl font-bold text-gray-900 mb-6'>Add Staff</h1>
+            <div className="flex-1 p-6 max-w-7xl mx-auto">
+                <h1 className="text-3xl font-bold text-gray-900 mb-6">Add Staff</h1>
                 
                 {success && (
                     <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center">
@@ -238,20 +212,20 @@ const AddStaff = () => {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className='bg-white shadow-sm rounded-lg p-6'>
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                <form onSubmit={handleSubmit} className="bg-white shadow-sm rounded-lg p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label htmlFor='firstName' className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
                                 First Name *
                             </label>
                             <input
-                                type='text'
-                                name='firstName'
-                                id='firstName'
+                                type="text"
+                                name="firstName"
+                                id="firstName"
                                 value={staff.firstName}
                                 onChange={handleChange}
                                 className={`w-full p-2 border ${errors.firstName ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
-                                placeholder='Enter First Name'
+                                placeholder="Enter First Name"
                             />
                             {errors.firstName && (
                                 <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
@@ -259,32 +233,32 @@ const AddStaff = () => {
                         </div>
 
                         <div>
-                            <label htmlFor='midName' className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="middleName" className="block text-sm font-medium text-gray-700 mb-1">
                                 Middle Name
                             </label>
                             <input
-                                type='text'
-                                name='midName'
-                                id='midName'
-                                value={staff.midName}
+                                type="text"
+                                name="middleName"
+                                id="middleName"
+                                value={staff.middleName}
                                 onChange={handleChange}
-                                className='w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
-                                placeholder='Enter Middle Name (Optional)'
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter Middle Name (Optional)"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor='lastName' className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
                                 Last Name *
                             </label>
                             <input
-                                type='text'
-                                name='lastName'
-                                id='lastName'
+                                type="text"
+                                name="lastName"
+                                id="lastName"
                                 value={staff.lastName}
                                 onChange={handleChange}
                                 className={`w-full p-2 border ${errors.lastName ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
-                                placeholder='Enter Last Name'
+                                placeholder="Enter Last Name"
                             />
                             {errors.lastName && (
                                 <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
@@ -292,92 +266,129 @@ const AddStaff = () => {
                         </div>
 
                         <div>
-                            <label htmlFor='staffgender' className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
                                 Gender *
                             </label>
                             <select
-                                name='staffgender'
-                                id='staffgender'
-                                value={staff.staffgender}
+                                name="gender"
+                                id="gender"
+                                value={staff.gender}
                                 onChange={handleChange}
-                                className={`w-full p-2 border ${errors.staffgender ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
+                                className={`w-full p-2 border ${errors.gender ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
                             >
-                                <option value='' disabled>Select Gender</option>
+                                <option value="">Select Gender</option>
                                 <option value="Male">Male</option>
                                 <option value="Female">Female</option>
                             </select>
-                            {errors.staffgender && (
-                                <p className="mt-1 text-sm text-red-600">{errors.staffgender}</p>
+                            {errors.gender && (
+                                <p className="mt-1 text-sm text-red-600">{errors.gender}</p>
                             )}
                         </div>
 
                         <div>
-                            <label htmlFor='stafftype' className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="staffType" className="block text-sm font-medium text-gray-700 mb-1">
                                 Staff Type *
                             </label>
                             <select
-                                name='stafftype'
-                                id='stafftype'
-                                value={staff.stafftype}
+                                name="staffType"
+                                id="staffType"
+                                value={staff.staffType}
                                 onChange={handleChange}
-                                className={`w-full p-2 border ${errors.stafftype ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
+                                className={`w-full p-2 border ${errors.staffType ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
                             >
-                                <option value='' disabled>Select Staff Type</option>
-                                <option value='JSA'>Junior Staff (JSA)</option>
-                                <option value='SSA'>Senior Staff (SSA)</option>
+                                <option value="">Select Staff Type</option>
+                                <option value="JSA">Junior Staff (JSA)</option>
+                                <option value="SSA">Senior Staff (SSA)</option>
                             </select>
-                            {errors.stafftype && (
-                                <p className="mt-1 text-sm text-red-600">{errors.stafftype}</p>
+                            {errors.staffType && (
+                                <p className="mt-1 text-sm text-red-600">{errors.staffType}</p>
                             )}
                         </div>
 
                         <div>
-                            <label htmlFor='dob' className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-1">
                                 Date of Birth *
                             </label>
                             <input
-                                type='date'
-                                name='dob'
-                                id='dob'
-                                value={staff.dob}
+                                type="date"
+                                name="dateOfBirth"
+                                id="dateOfBirth"
+                                value={staff.dateOfBirth}
                                 onChange={handleChange}
-                                className={`w-full p-2 border ${errors.dob ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
+                                className={`w-full p-2 border ${errors.dateOfBirth ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
                             />
-                            {errors.dob && (
-                                <p className="mt-1 text-sm text-red-600">{errors.dob}</p>
+                            {errors.dateOfBirth && (
+                                <p className="mt-1 text-sm text-red-600">{errors.dateOfBirth}</p>
                             )}
                         </div>
-
                         <div>
-                            <label htmlFor='fileNumber' className="block text-sm font-medium text-gray-700 mb-1">
-                                File Number *
+                            <label htmlFor="salaryLevel" className="block text-sm font-medium text-gray-700 mb-1">
+                                CONHESS Level *
                             </label>
-                            <input
-                                type='text'
-                                name='fileNumber'
-                                id='fileNumber'
-                                value={staff.fileNumber}
-                                onChange={handleChange}
-                                className={`w-full p-2 border ${errors.fileNumber ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
-                                placeholder='Enter File Number'
-                            />
-                            {errors.fileNumber && (
-                                <p className="mt-1 text-sm text-red-600">{errors.fileNumber}</p>
-                            )}
+                            <select
+                                name="salaryLevel"
+                                id="salaryLevel"
+                                value={selectedLevel}
+                                onChange={(e) => {
+                                    setSelectedLevel(e.target.value);
+                                    setStaff(prev => ({
+                                        ...prev,
+                                        salaryGrade: `CONHESS ${e.target.value}/${selectedStep || ''}`,
+                                        conhessLevel: `CONHESS ${e.target.value}`,
+                                    }));
+                                }}
+                                className={`w-full p-2 border ${errors.salaryGrade ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
+                                disabled={!staff.staffType} // Disable until staff type is selected
+                            >
+                                <option value="">Select Level</option>
+                                {staff.staffType && staffLevels[staff.staffType]?.map((level) => (
+                                    <option key={level} value={level}>
+                                        CONHESS {level}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         <div>
-                            <label htmlFor='department' className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="salaryStep" className="block text-sm font-medium text-gray-700 mb-1">
+                                Step *
+                            </label>
+                            <select
+                                name="salaryStep"
+                                id="salaryStep"
+                                value={selectedStep}
+                                onChange={(e) => {
+                                    setSelectedStep(e.target.value);
+                                    setStaff(prev => ({
+                                        ...prev,
+                                        salaryGrade: `CONHESS ${selectedLevel}/${e.target.value}`,
+                                    }));
+                                }}
+                                className={`w-full p-2 border ${errors.salaryGrade ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
+                                disabled={!selectedLevel} // Disable until level is selected
+                            >
+                                <option value="">Select Step</option>
+                                {steps.map((step) => (
+                                    <option key={step} value={step}>
+                                        Step {step}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        
+
+                        <div>
+                            <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-1">
                                 Department *
                             </label>
                             <input
-                                type='text'
-                                name='department'
-                                id='department'
+                                type="text"
+                                name="department"
+                                id="department"
                                 value={staff.department}
                                 onChange={handleChange}
                                 className={`w-full p-2 border ${errors.department ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
-                                placeholder='Enter Department'
+                                placeholder="Enter Department"
                             />
                             {errors.department && (
                                 <p className="mt-1 text-sm text-red-600">{errors.department}</p>
@@ -385,182 +396,163 @@ const AddStaff = () => {
                         </div>
 
                         <div>
-                            <label htmlFor='staffdateoffirstapt' className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="dateOfFirstAppointment" className="block text-sm font-medium text-gray-700 mb-1">
                                 Date of First Appointment *
                             </label>
                             <input
-                                type='date'
-                                name='staffdateoffirstapt'
-                                id='staffdateoffirstapt'
-                                value={staff.staffdateoffirstapt}
+                                type="date"
+                                name="dateOfFirstAppointment"
+                                id="dateOfFirstAppointment"
+                                value={staff.dateOfFirstAppointment}
                                 onChange={handleChange}
-                                className={`w-full p-2 border ${errors.staffdateoffirstapt ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
+                                className={`w-full p-2 border ${errors.dateOfFirstAppointment ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
                             />
-                            {errors.staffdateoffirstapt && (
-                                <p className="mt-1 text-sm text-red-600">{errors.staffdateoffirstapt}</p>
+                            {errors.dateOfFirstAppointment && (
+                                <p className="mt-1 text-sm text-red-600">{errors.dateOfFirstAppointment}</p>
                             )}
                         </div>
 
                         <div>
-                            <label htmlFor='phone' className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
                                 Phone Number *
                             </label>
                             <input
-                                type='text'
-                                name='phone'
-                                id='phone'
-                                value={staff.phone}
+                                type="text"
+                                name="phoneNumber"
+                                id="phoneNumber"
+                                value={staff.phoneNumber}
                                 onChange={handleChange}
-                                className={`w-full p-2 border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
-                                placeholder='Enter Phone Number'
+                                className={`w-full p-2 border ${errors.phoneNumber ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
+                                placeholder="Enter Phone Number"
                             />
-                            {errors.phone && (
-                                <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+                            {errors.phoneNumber && (
+                                <p className="mt-1 text-sm text-red-600">{errors.phoneNumber}</p>
                             )}
                         </div>
 
                         <div>
-                            <label htmlFor='staffippissNumber' className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="ippissNumber" className="block text-sm font-medium text-gray-700 mb-1">
                                 IPPISS Number *
                             </label>
                             <input
-                                type='text'
-                                name='staffippissNumber'
-                                id='staffippissNumber'
-                                value={staff.staffippissNumber}
+                                type="text"
+                                name="ippissNumber"
+                                id="ippissNumber"
+                                value={staff.ippissNumber}
                                 onChange={handleChange}
-                                className={`w-full p-2 border ${errors.staffippissNumber ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
-                                placeholder='Enter IPPISS Number'
+                                className={`w-full p-2 border ${errors.ippissNumber ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
+                                placeholder="Enter IPPISS Number"
                             />
-                            {errors.staffippissNumber && (
-                                <p className="mt-1 text-sm text-red-600">{errors.staffippissNumber}</p>
+                            {errors.ippissNumber && (
+                                <p className="mt-1 text-sm text-red-600">{errors.ippissNumber}</p>
                             )}
                         </div>
 
                         <div>
-                            <label htmlFor='staffrank' className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="rank" className="block text-sm font-medium text-gray-700 mb-1">
                                 Staff Rank *
                             </label>
                             <input
-                                type='text'
-                                name='staffrank'
-                                id='staffrank'
-                                value={staff.staffrank}
+                                type="text"
+                                name="rank"
+                                id="rank"
+                                value={staff.rank}
                                 onChange={handleChange}
-                                className={`w-full p-2 border ${errors.staffrank ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
-                                placeholder='Enter Staff Rank'
+                                className={`w-full p-2 border ${errors.rank ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
+                                placeholder="Enter Staff Rank"
                             />
-                            {errors.staffrank && (
-                                <p className="mt-1 text-sm text-red-600">{errors.staffrank}</p>
+                            {errors.rank && (
+                                <p className="mt-1 text-sm text-red-600">{errors.rank}</p>
                             )}
                         </div>
-
+                        
                         <div>
-                            <label htmlFor='staffsalgrade' className="block text-sm font-medium text-gray-700 mb-1">
-                                Salary Grade *
+                            <label htmlFor="fileNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                                File Number *
                             </label>
                             <input
-                                type='text'
-                                name='staffsalgrade'
-                                id='staffsalgrade'
-                                value={staff.staffsalgrade}
+                                type="text"
+                                name="fileNumber"
+                                id="fileNumber"
+                                value={staff.fileNumber}
                                 onChange={handleChange}
-                                className={`w-full p-2 border ${errors.staffsalgrade ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
-                                placeholder='Enter Salary Grade'
+                                className={`w-full p-2 border ${errors.fileNumber ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
+                                placeholder="Enter File Number"
                             />
-                            {errors.staffsalgrade && (
-                                <p className="mt-1 text-sm text-red-600">{errors.staffsalgrade}</p>
+                            {errors.fileNumber && (
+                                <p className="mt-1 text-sm text-red-600">{errors.fileNumber}</p>
                             )}
                         </div>
+                        
 
                         <div>
-                            <label htmlFor='staffdateofpresentapt' className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="dateOfPresentAppointment" className="block text-sm font-medium text-gray-700 mb-1">
                                 Date of Present Appointment *
                             </label>
                             <input
-                                type='date'
-                                name='staffdateofpresentapt'
-                                id='staffdateofpresentapt'
-                                value={staff.staffdateofpresentapt}
+                                type="date"
+                                name="dateOfPresentAppointment"
+                                id="dateOfPresentAppointment"
+                                value={staff.dateOfPresentAppointment}
                                 onChange={handleChange}
-                                className={`w-full p-2 border ${errors.staffdateofpresentapt ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
+                                className={`w-full p-2 border ${errors.dateOfPresentAppointment ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
                             />
-                            {errors.staffdateofpresentapt && (
-                                <p className="mt-1 text-sm text-red-600">{errors.staffdateofpresentapt}</p>
+                            {errors.dateOfPresentAppointment && (
+                                <p className="mt-1 text-sm text-red-600">{errors.dateOfPresentAppointment}</p>
                             )}
                         </div>
 
                         <div>
-                            <label htmlFor='stafforigin' className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="stateOfOrigin" className="block text-sm font-medium text-gray-700 mb-1">
                                 State of Origin *
                             </label>
                             <input
-                                type='text'
-                                name='stafforigin'
-                                id='stafforigin'
-                                value={staff.stafforigin}
+                                type="text"
+                                name="stateOfOrigin"
+                                id="stateOfOrigin"
+                                value={staff.stateOfOrigin}
                                 onChange={handleChange}
-                                className={`w-full p-2 border ${errors.stafforigin ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
-                                placeholder='Enter State of Origin'
+                                className={`w-full p-2 border ${errors.stateOfOrigin ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
+                                placeholder="Enter State of Origin"
                             />
-                            {errors.stafforigin && (
-                                <p className="mt-1 text-sm text-red-600">{errors.stafforigin}</p>
+                            {errors.stateOfOrigin && (
+                                <p className="mt-1 text-sm text-red-600">{errors.stateOfOrigin}</p>
                             )}
                         </div>
 
                         <div>
-                            <label htmlFor='localgovorigin' className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="localGovernment" className="block text-sm font-medium text-gray-700 mb-1">
                                 Local Government of Origin *
                             </label>
                             <input
-                                type='text'
-                                name='localgovorigin'
-                                id='localgovorigin'
-                                value={staff.localgovorigin}
+                                type="text"
+                                name="localGovernment"
+                                id="localGovernment"
+                                value={staff.localGovernment}
                                 onChange={handleChange}
-                                className={`w-full p-2 border ${errors.localgovorigin ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
-                                placeholder='Enter Local Government of Origin'
+                                className={`w-full p-2 border ${errors.localGovernment ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
+                                placeholder="Enter Local Government of Origin"
                             />
-                            {errors.localgovorigin && (
-                                <p className="mt-1 text-sm text-red-600">{errors.localgovorigin}</p>
+                            {errors.localGovernment && (
+                                <p className="mt-1 text-sm text-red-600">{errors.localGovernment}</p>
                             )}
                         </div>
 
                         <div>
-                            <label htmlFor='qualification' className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="qualification" className="block text-sm font-medium text-gray-700 mb-1">
                                 Qualification *
                             </label>
                             <input
-                                type='text'
-                                name='qualification'
-                                id='qualification'
+                                type="text"
+                                name="qualification"
+                                id="qualification"
                                 value={staff.qualification}
                                 onChange={handleChange}
                                 className={`w-full p-2 border ${errors.qualification ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
-                                placeholder='Enter Qualification'
+                                placeholder="Enter Qualification"
                             />
                             {errors.qualification && (
                                 <p className="mt-1 text-sm text-red-600">{errors.qualification}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label htmlFor='confirmation_status' className="block text-sm font-medium text-gray-700 mb-1">
-                                Confirmation Status *
-                            </label>
-                            <select
-                                name='confirmation_status'
-                                id='confirmation_status'
-                                value={staff.confirmation_status}
-                                onChange={handleChange}
-                                className={`w-full p-2 border ${errors.confirmation_status ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
-                            >
-                                <option value='' disabled>Select Confirmation Status</option>
-                                <option value='confirmed'>Confirmed</option>
-                                <option value='not_confirmed'>Not Confirmed</option>
-                            </select>
-                            {errors.confirmation_status && (
-                                <p className="mt-1 text-sm text-red-600">{errors.confirmation_status}</p>
                             )}
                         </div>
 
@@ -582,4 +574,3 @@ const AddStaff = () => {
 };
 
 export default AddStaff;
-                                

@@ -99,7 +99,7 @@ const Sidebar = () => {
                 {openMenu.managePermanent && !isCollapsed && (
                     <ul className="pl-8 space-y-2">
                         {collapsedItemInMenu('Add Staff', faUserPlus, '/api/add_staff')}
-                        {collapsedItemInMenu('List of Staff', faList, '/list_staff')}
+                        {collapsedItemInMenu('List of Staff', faList, '/api/liststaffs')}
                     </ul>
                 )}
 
