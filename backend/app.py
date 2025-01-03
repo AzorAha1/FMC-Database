@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 from flask_cors import CORS
 from bson import json_util
 
@@ -408,32 +408,91 @@ def list_staff():
     else:
         # Convert MongoDB results to JSON-serializable format
         return json.loads(json_util.dumps({'staff': permanent_staff_list}))
-from datetime import datetime, timedelta
 
-@app.route('/Confirmation', methods=['GET', 'POST'])
-@login_required
+
+# old confirmation endpoint
+# @app.route('/confirmation', methods=['GET', 'POST'])
+# # @login_required
+# def confirmation():
+#     currenttime = datetime.now()
+#     two_years_ago = currenttime - timedelta(days=730)
+    
+#     eligible_staff = list(mongo.db.permanent_staff.find({
+#         'staffdateoffirstapt': {'$lt': two_years_ago.strftime('%Y-%m-%d')},
+#         'confirmation_status': 'unconfirmed'
+#     }))
+    
+#     pending_staff = list(mongo.db.permanent_staff.find({
+#         'confirmation_status': 'unconfirmed',
+#         'staffdateoffirstapt': {'$gte': two_years_ago.strftime('%Y-%m-%d')}
+#     }))
+    
+#     # Calculate remaining days for pending staff
+#     for staff in pending_staff:
+#         dofa = datetime.strptime(staff['staffdateoffirstapt'], '%Y-%m-%d')
+#         staff['days_remaining'] = ((dofa + timedelta(days=730)) - currenttime).days
+    
+#     return render_template('confirmation.html', title='Confirmation', 
+#                            eligible_staff=eligible_staff, pending_staff=pending_staff, 
+#                            currenttime=currenttime)
+
+from datetime import datetime, timedelta
+# new confirmation endpoint
+@app.route('/api/confirmation', methods=['GET', 'POST'])
 def confirmation():
-    currenttime = datetime.now()
-    two_years_ago = currenttime - timedelta(days=730)
-    
-    eligible_staff = list(mongo.db.permanent_staff.find({
-        'staffdateoffirstapt': {'$lt': two_years_ago.strftime('%Y-%m-%d')},
-        'confirmation_status': 'unconfirmed'
-    }))
-    
-    pending_staff = list(mongo.db.permanent_staff.find({
-        'confirmation_status': 'unconfirmed',
-        'staffdateoffirstapt': {'$gte': two_years_ago.strftime('%Y-%m-%d')}
-    }))
-    
-    # Calculate remaining days for pending staff
-    for staff in pending_staff:
-        dofa = datetime.strptime(staff['staffdateoffirstapt'], '%Y-%m-%d')
-        staff['days_remaining'] = ((dofa + timedelta(days=730)) - currenttime).days
-    
-    return render_template('confirmation.html', title='Confirmation', 
-                           eligible_staff=eligible_staff, pending_staff=pending_staff, 
-                           currenttime=currenttime)
+    """confirmation endpoint"""
+    page = int(request.args.get('page', 1))
+    limit = int(request.args.get('limit', 10))
+    skip = (page - 1) * limit
+    staff_data = mongo.db.permanent_staff.find({}, {
+        'staff_id': 1,
+        'firstName': 1,
+        'midName': 1,
+        'lastName': 1,
+        'fileNumber': 1,
+        'stafftype': 1,
+        'staffsalgrade': 1,
+        'confirmation_status': 1,
+        'staffdateoffirstapt': 1
+    }).skip(skip).limit(limit)
+    total_staffs = mongo.db.permanent_staff.count_documents({})
+    totalPages = (total_staffs // limit) + (1 if total_staffs % limit > 0 else 0)
+    current_date = datetime.utcnow().replace(tzinfo=None)
+    two_years = timedelta(days=730)
+    result = []
+
+    for staff in staff_data:
+        dateoffirstapt = datetime.strptime(staff['staffdateoffirstapt'], '%Y-%m-%d')
+        days_until_confirmation = (dateoffirstapt + two_years - current_date).days
+        isEligible = days_until_confirmation <= 0
+        
+        newstatus = 'confirmed' if isEligible else 'unconfirmed'
+        if staff.get('confirmation_status') != newstatus:
+            mongo.db.permanent_staff.update_one(
+                {'staff_id': staff['staff_id']},
+                {'$set': {'confirmation_status': newstatus}}
+            )
+
+        result.append({
+            'staff_id': staff['staff_id'],
+            'firstName': staff.get('firstName', ''),
+            'midName': staff.get('midName', ''),
+            'lastName': staff.get('lastName', ''),
+            'fileNumber': staff.get('fileNumber', ''),
+            'stafftype': staff.get('stafftype', ''),
+            'salaryLevel': staff.get('staffsalgrade', ''),
+            'dateoffirstapt': staff['staffdateoffirstapt'],
+            'isEligible': isEligible,
+            'daysUntilConfirmation': max(0, days_until_confirmation),
+            'confirmation_status': newstatus
+        })
+    return jsonify({
+        'data': result,
+        'totalPages': totalPages,
+        'currentPage': page,
+        'totalStaffs': total_staffs
+    })
+
 
 @app.route('/Promotion', methods=['GET', 'POST'])
 @login_required

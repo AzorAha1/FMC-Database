@@ -4,6 +4,7 @@ import Dashboard from './Dashboard.jsx';
 import Reports from './Reports.jsx';
 import ListStaff from './LIstStaff.jsx';
 import AddStaff from './AddStaff.jsx';
+import Confirmation from './Confirmation.jsx';
 
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path='/api/reports' element={<Reports/>} />
         <Route path="/api/add_staff" element={<AddStaff />} />
         <Route path='/api/liststaffs' element={<ListStaff />}/>
+        <Route path='/api/confirmation' element={<Confirmation />}/>
       </Routes>
     </Router>
   );

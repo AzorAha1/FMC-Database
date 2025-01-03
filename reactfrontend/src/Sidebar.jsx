@@ -104,7 +104,7 @@ const Sidebar = () => {
                 )}
 
                 {/* Confirmation */}
-                {collapsedItemInMenu('Confirmation', faCheckCircle, '/confirmation')}
+                {collapsedItemInMenu('Confirmation', faCheckCircle, '/api/confirmation')}
 
                 {/* Promotion */}
                 {collapsedItemInMenu('Promotion', faArrowUp, '/promotion')}

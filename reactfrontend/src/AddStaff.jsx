@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from './api/axios.js';
 import Sidebar from './Sidebar.jsx';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, UserPlus, ChevronRight } from 'lucide-react';
 
 const AddStaff = () => {
     const [errors, setErrors] = useState({});
