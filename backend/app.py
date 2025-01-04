@@ -303,93 +303,158 @@ def add_staff():
             'success': False,
             'message': 'Failed to add Permanent staff. Please try again.'
         }), 400
-@app.route('/confirm_staff/<string:staff_id>', methods=['GET', 'POST'])
-@admin_required
-@login_required
-def confirm_staff(staff_id):
-    userbysession = session.get('email')
-    current_user = mongo.db.user.find_one({'email': userbysession})
-    staff = mongo.db.permanent_staff.find_one({'staff_id': staff_id})
-    if not staff:
-        flash('Staff not found', 'error')
-        return redirect(url_for('table_list'))
-    staff_date_of_first_appointment = datetime.strptime(staff['staffdateoffirstapt'], '%Y-%m-%d')
-    two_years = timedelta(days=730)
-    current_time = datetime.utcnow()
-    if current_time - staff_date_of_first_appointment > two_years:
-        if staff['confirmation_status'] == 'unconfirmed':
-            if request.method == 'POST':
-                mongo.db.permanent_staff.update_one(
-                    {'staff_id': staff_id},
-                    {'$set': {'confirmation_status': 'confirmed'}}
-                    )
-                flash('Staff confirmed successfully!', 'success')
-                return redirect(url_for('Confirmation'))
-        else:
-            flash('Staff is already confirmed', 'info')
-            return redirect(url_for('Confirmation'))
-        return render_template('confirm_staff.html', title='Confirm Staff', staff=staff)
-    else:
-        remaining_days = (staff_date_of_first_appointment + two_years - current_time).days
-        flash(f'Staff is not due for confirmation. {remaining_days} days remaining', 'info')
-        return redirect(url_for('Confirmaton'))
+# @app.route('/confirm_staff/<string:staff_id>', methods=['GET', 'POST'])
+# @admin_required
+# @login_required
+# def confirm_staff(staff_id):
+#     userbysession = session.get('email')
+#     current_user = mongo.db.user.find_one({'email': userbysession})
+#     staff = mongo.db.permanent_staff.find_one({'staff_id': staff_id})
+#     if not staff:
+#         flash('Staff not found', 'error')
+#         return redirect(url_for('table_list'))
+#     staff_date_of_first_appointment = datetime.strptime(staff['staffdateoffirstapt'], '%Y-%m-%d')
+#     two_years = timedelta(days=730)
+#     current_time = datetime.utcnow()
+#     if current_time - staff_date_of_first_appointment > two_years:
+#         if staff['confirmation_status'] == 'unconfirmed':
+#             if request.method == 'POST':
+#                 mongo.db.permanent_staff.update_one(
+#                     {'staff_id': staff_id},
+#                     {'$set': {'confirmation_status': 'confirmed'}}
+#                     )
+#                 flash('Staff confirmed successfully!', 'success')
+#                 return redirect(url_for('Confirmation'))
+#         else:
+#             flash('Staff is already confirmed', 'info')
+#             return redirect(url_for('Confirmation'))
+#         return render_template('confirm_staff.html', title='Confirm Staff', staff=staff)
+#     else:
+#         remaining_days = (staff_date_of_first_appointment + two_years - current_time).days
+#         flash(f'Staff is not due for confirmation. {remaining_days} days remaining', 'info')
+#         return redirect(url_for('Confirmaton'))
         
-            
-            
-@app.route('/edit_staff/<string:staff_id>', methods=['GET', 'POST'])
-@admin_required
-@login_required
-def edit_staff(staff_id):
+
+
+#new endpoint to edit and delete staff
+@app.route('/api/manage_staff/<string:staff_id>', methods=['GET', 'PUT', 'DELETE'])
+def manage_staff(staff_id):
+    """Manage staff by editing or deleting"""
     userbysession = session.get('email')
+    if not userbysession:
+        return jsonify({'message': 'User session not found'}), 401
+
     current_user = mongo.db.user.find_one({'email': userbysession})
+    if not current_user:
+        return jsonify({'message': 'User not found'}), 404
+
     staff = mongo.db.permanent_staff.find_one({'staff_id': staff_id})
     if not staff:
-        flash('Staff not found', 'error')
-        return redirect(url_for('table_list'))
-    if request.method == 'POST':
-       updated_staff = {
-            'firstName': request.form.get('stafffirstName'),
-            'midName': request.form.get('staffmidName'),
-            'lastName': request.form.get('stafflastName'),
-            'dob': request.form.get('staffdob'),
-            'fileNumber': request.form.get('fileNumber'),
-            'department': request.form.get('department'),
-            'phone': request.form.get('staffpno'),
-            'staffippissNumber': request.form.get('staffippissNumber'),
-            'staffrank': request.form.get('staffrank'),
-            'staffsalgrade': request.form.get('staffsalgrade'),
-            'staffdateofpresentapt': request.form.get('staffdopa'),
-            'staffgender': request.form.get('gender'),
-            'stafforigin': request.form.get('stafforigin'),
-            'localgovorigin': request.form.get('localgovorigin'),
-            'qualification': request.form.get('qualification')
+        return jsonify({'message': 'Staff not found'}), 404
+
+    if request.method == 'PUT':
+        data = request.get_json()
+        updated_staff = {
+            'firstName': data.get('stafffirstName'),
+            'midName': data.get('staffmidName'),
+            'lastName': data.get('stafflastName'),
+            'dob': data.get('staffdob'),
+            'fileNumber': data.get('fileNumber'),
+            'department': data.get('department'),
+            'phone': data.get('staffpno'),
+            'staffippissNumber': data.get('staffippissNumber'),
+            'staffrank': data.get('staffrank'),
+            'staffsalgrade': data.get('staffsalgrade'),
+            'staffdateofpresentapt': data.get('staffdopa'),
+            'staffgender': data.get('staffgender'),
+            'stafforigin': data.get('stafforigin'),
+            'localgovorigin': data.get('localgovorigin'),
+            'qualification': data.get('qualification')
         }
-       result = mongo.db.permanent_staff.update_one(
+
+        result = mongo.db.permanent_staff.update_one(
             {'staff_id': staff_id},
             {'$set': updated_staff}
         )
-       if result.modified_count > 0:
-            flash('Staff updated successfully!', 'success')
-            log_reports(action='edit', staff_id=staff_id, details=f'Permanent staff updated by {current_user["username"]}({current_user["email"]}) from {current_user["department"]} department with File Number of {current_user["filenumber"]}')
-            return redirect(url_for('table_list'))
-    return render_template('edit_staff.html', title='Edit Staff', staff=staff)
-@app.route('/delete_staff/<string:staff_id>', methods=['GET', 'POST'])
-@admin_required
-@login_required
-def delete_staff(staff_id):
-    userbysession = session.get('email')
-    current_user = mongo.db.user.find_one({'email': userbysession})
-    staff = mongo.db.permanent_staff.find_one({'staff_id': staff_id})
-    if not staff:
-        flash('Staff not found', 'error')
-        return redirect(url_for('table_list'))
-    if request.method == 'POST':
-        mongo.db.permanent_staff.delete_one({'staff_id': staff_id})
-        flash('Staff deleted successfully!', 'success')
-        log_reports(action='delete', staff_id=staff_id, details=f'Permanent staff deleted by {current_user["username"]}({current_user["email"]}) from {current_user["department"]} department with File Number of {current_user["filenumber"]}')
-        print(f"{staff['firstName']} successfully deleted")
-        redirect(url_for('table_list'))
-    return render_template('delete_staff.html', title='Delete Staff', staff=staff)
+        if result.modified_count > 0:
+            log_reports(
+                action='edit',
+                staff_id=staff_id,
+                details=f'Permanent staff updated by {current_user.get("username", "Unknown")}({current_user.get("email", "Unknown")}) from {current_user.get("department", "Unknown")} department with File Number of {current_user.get("filenumber", "Unknown")}'
+            )
+            return jsonify({'message': 'Staff updated successfully'}), 200
+        else:
+            return jsonify({'message': 'No changes made to the staff'}), 200
+
+    elif request.method == 'DELETE':
+        result = mongo.db.permanent_staff.delete_one({'staff_id': staff_id})
+        if result.deleted_count > 0:
+            log_reports(
+                action='delete',
+                staff_id=staff_id,
+                details=f'Permanent staff deleted by {current_user.get("username", "Unknown")}({current_user.get("email", "Unknown")}) from {current_user.get("department", "Unknown")} department with File Number of {current_user.get("filenumber", "Unknown")}'
+            )
+            return jsonify({'message': 'Staff deleted successfully'}), 200
+        else:
+            return jsonify({'message': 'Staff not found'}), 404
+
+            
+# old endpoint for edit staff            
+# @app.route('/edit_staff/<string:staff_id>', methods=['GET', 'POST'])
+# @admin_required
+# @login_required
+# def edit_staff(staff_id):
+#     userbysession = session.get('email')
+#     current_user = mongo.db.user.find_one({'email': userbysession})
+#     staff = mongo.db.permanent_staff.find_one({'staff_id': staff_id})
+#     if not staff:
+#         flash('Staff not found', 'error')
+#         return redirect(url_for('table_list'))
+#     if request.method == 'POST':
+#        updated_staff = {
+#             'firstName': request.form.get('stafffirstName'),
+#             'midName': request.form.get('staffmidName'),
+#             'lastName': request.form.get('stafflastName'),
+#             'dob': request.form.get('staffdob'),
+#             'fileNumber': request.form.get('fileNumber'),
+#             'department': request.form.get('department'),
+#             'phone': request.form.get('staffpno'),
+#             'staffippissNumber': request.form.get('staffippissNumber'),
+#             'staffrank': request.form.get('staffrank'),
+#             'staffsalgrade': request.form.get('staffsalgrade'),
+#             'staffdateofpresentapt': request.form.get('staffdopa'),
+#             'staffgender': request.form.get('gender'),
+#             'stafforigin': request.form.get('stafforigin'),
+#             'localgovorigin': request.form.get('localgovorigin'),
+#             'qualification': request.form.get('qualification')
+#         }
+#        result = mongo.db.permanent_staff.update_one(
+#             {'staff_id': staff_id},
+#             {'$set': updated_staff}
+#         )
+#        if result.modified_count > 0:
+#             flash('Staff updated successfully!', 'success')
+#             log_reports(action='edit', staff_id=staff_id, details=f'Permanent staff updated by {current_user["username"]}({current_user["email"]}) from {current_user["department"]} department with File Number of {current_user["filenumber"]}')
+#             return redirect(url_for('table_list'))
+#     return render_template('edit_staff.html', title='Edit Staff', staff=staff)
+# old endpoint for delete staff
+# @app.route('/delete_staff/<string:staff_id>', methods=['GET', 'POST'])
+# @admin_required
+# @login_required
+# def delete_staff(staff_id):
+#     userbysession = session.get('email')
+#     current_user = mongo.db.user.find_one({'email': userbysession})
+#     staff = mongo.db.permanent_staff.find_one({'staff_id': staff_id})
+#     if not staff:
+#         flash('Staff not found', 'error')
+#         return redirect(url_for('table_list'))
+#     if request.method == 'POST':
+#         mongo.db.permanent_staff.delete_one({'staff_id': staff_id})
+#         flash('Staff deleted successfully!', 'success')
+#         log_reports(action='delete', staff_id=staff_id, details=f'Permanent staff deleted by {current_user["username"]}({current_user["email"]}) from {current_user["department"]} department with File Number of {current_user["filenumber"]}')
+#         print(f"{staff['firstName']} successfully deleted")
+#         redirect(url_for('table_list'))
+#     return render_template('delete_staff.html', title='Delete Staff', staff=staff)
 
 # old endpoint for list of staff
 # @app.route('/Listofstaff', methods=['GET', 'POST'])

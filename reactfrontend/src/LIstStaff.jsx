@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "./api/axios.js";
 import Sidebar from "./Sidebar.jsx";
+import EditStaff from "./EditStaff.jsx";
 
 const StaffTable = () => {
   const [staffData, setStaffData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingStaff, setEditingStaff] = useState(null);
+  const [isEditWindowOpen, setIsEditWindowOpen] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -22,18 +25,85 @@ const StaffTable = () => {
     fetchStaffData();
   }, []);
 
-  const handleEdit = (staffId) => {
-    console.log("Edit staff with ID:", staffId);
-  };
+  const handleEdit = (staff) => {
+    setEditingStaff(staff);
+    setIsEditWindowOpen(true);
+  }
 
-  const handleDelete = async (staffId) => {
+  const handleSaveEdit = async (updatedData) => {
     try {
-      await axios.delete(`/api/staff/${staffId}`);
-      setStaffData(staffData.filter((staff) => staff.staff_id !== staffId));
+        const editeddata = {
+            staff_id: editingStaff.staff_id,
+            stafffirstName: updatedData.firstName,
+            staffmidName: updatedData.midName,
+            stafflastName: updatedData.lastName,
+            staffdob: updatedData.dob,
+            fileNumber: updatedData.fileNumber,
+            department: updatedData.department,
+            staffpno: updatedData.phone,
+            staffippissNumber: updatedData.staffippissNumber,
+            staffrank: updatedData.staffrank,
+            staffsalgrade: updatedData.staffsalgrade,
+            staffdopa: updatedData.staffdateofpresentapt,
+            staffgender: updatedData.staffgender,
+            stafforigin: updatedData.stafforigin,
+            localgovorigin: updatedData.localgovorigin,
+            qualification: updatedData.qualification
+        };
+
+        await axios.put(`/api/manage_staff/${editingStaff.staff_id}`, editeddata);
+        
+        // Create updated staff object that matches the structure of your staffData
+        const updatedStaffRecord = {
+            ...editingStaff,
+            firstName: updatedData.firstName,
+            midName: updatedData.midName,
+            lastName: updatedData.lastName,
+            dob: updatedData.dob,
+            fileNumber: updatedData.fileNumber,
+            department: updatedData.department,
+            phone: updatedData.phone,
+            staffippissNumber: updatedData.staffippissNumber,
+            staffrank: updatedData.staffrank,
+            staffsalgrade: updatedData.staffsalgrade,
+            staffdateofpresentapt: updatedData.staffdateofpresentapt,
+            staffgender: updatedData.staffgender,
+            stafforigin: updatedData.stafforigin,
+            localgovorigin: updatedData.localgovorigin,
+            qualification: updatedData.qualification
+        };
+
+        // Update the staffData state with the new information
+        setStaffData(staffData.map((staff) => 
+            staff.staff_id === editingStaff.staff_id ? updatedStaffRecord : staff
+        ));
+
+        setIsEditWindowOpen(false);
+        setEditingStaff(null);
     } catch (err) {
-      console.error("Delete error:", err);
+        console.error("Edit error:", err);
     }
-  };
+};
+
+const handleDelete = async (staffId) => {
+    if (window.confirm("Are you sure you want to delete this staff record?")) {
+        try {
+            await axios.delete(`/api/manage_staff/${staffId}`);  // Updated endpoint to match your backend
+            
+            // Update the state to remove the deleted staff
+            setStaffData(staffData.filter((staff) => staff.staff_id !== staffId));
+            
+            // Optionally add a success message
+            setSuccessMessage("Staff record deleted successfully!");
+            setTimeout(() => setSuccessMessage(""), 3000);
+        } catch (err) {
+            console.error("Delete error:", err);
+            // Optionally add error handling
+            setError("Failed to delete staff record. Please try again.");
+            setTimeout(() => setError(null), 3000);
+        }
+    }
+};
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -98,12 +168,12 @@ const StaffTable = () => {
                           {staff.staffsalgrade}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
-                          <button
-                            onClick={() => handleEdit(staff.staff_id)}
+                        <button
+                            onClick={() => handleEdit(staff)}
                             className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-full hover:bg-blue-100 transition-colors mr-2"
-                          >
+                        >
                             Edit
-                          </button>
+                        </button>
                           <button
                             onClick={() => handleDelete(staff.staff_id)}
                             className="inline-flex items-center px-3 py-1 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors"
@@ -124,6 +194,17 @@ const StaffTable = () => {
           )}
         </div>
       </div>
+      {editingStaff && (
+        <EditStaff
+        staff={editingStaff}
+        isOpen={isEditWindowOpen}
+        onClose={() => {
+            setIsEditWindowOpen(false);
+            setEditingStaff(null);
+        }}
+        onSave={(updatedData) => handleSaveEdit(updatedData)}
+        />
+    )}
     </div>
   );
 };
