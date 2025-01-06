@@ -26,6 +26,7 @@ const Reports = () => {
     try {
       setLoading(true);
       const response = await axios.get('/api/reports');
+      console.log('Raw report data:', response.data.reports);
       setReports(response.data.reports || []);
       setError(null);
     } catch (err) {
@@ -45,9 +46,11 @@ const Reports = () => {
 
   const sortedReports = [...reports].sort((a, b) => {
     if (sortConfig.key === 'date') {
+      const dateA = new Date(a.date.$date || a.date);
+      const dateB = new Date(b.date.$date || b.date);
       return sortConfig.direction === 'asc'
-        ? new Date(a.date) - new Date(b.date)
-        : new Date(b.date) - new Date(a.date);
+        ? dateA - dateB
+        : dateB - dateA;
     }
     return sortConfig.direction === 'asc'
       ? String(a[sortConfig.key]).localeCompare(String(b[sortConfig.key]))
@@ -68,13 +71,26 @@ const Reports = () => {
   const totalPages = Math.ceil(filteredReports.length / reportsPerPage);
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    try {
+      // Parse the MongoDB date string (handles both ISO strings and MongoDB's extended JSON)
+      const date = new Date(dateString.$date || dateString);
+      
+      if (isNaN(date.getTime())) {
+        console.error('Invalid date:', dateString);
+        return 'Invalid date';
+      }
+  
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
   };
 
   const handleExport = () => {

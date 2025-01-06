@@ -13,6 +13,7 @@ import uuid
 from flask import make_response
 
 
+
 app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/statics')
 app.secret_key = 'secretkeyforfmcdatabase'
 app.config['MONGO_URI'] = 'mongodb://localhost:27017/fmc-database'
@@ -733,6 +734,7 @@ def log_reports(action, staff_id, details):
 @app.route('/api/reports', methods=['GET', 'POST'])
 def reports():
     reports = list(mongo.db.reports.find().sort('date', DESCENDING))
+    print("Sample report date:", reports[0]['date'] if reports else None)  # Debug print
     return json_util.dumps({'reports': reports})
 @app.route('/logout', methods=['GET'])
 def logout():
