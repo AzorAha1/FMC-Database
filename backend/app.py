@@ -33,8 +33,6 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
-
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
@@ -484,6 +482,67 @@ def manage_staff(staff_id):
         else:
             return jsonify({'message': 'Staff not found'}), 404
 
+# manage lcm staff by edit and delete
+@app.route('/api/manage_lcm_staff/<string:lcmstaff_id>', methods=['GET', 'PUT', 'DELETE'])
+def manage_lcm_staff(lcmstaff_id):
+    """Manage LCM staff by editing or deleting"""
+    userbysession = session.get('email')
+    if not userbysession:
+        return jsonify({'message': 'User session not found'}), 401
+
+    current_user = mongo.db.user.find_one({'email': userbysession})
+    if not current_user:
+        return jsonify({'message': 'User not found'}), 404
+
+    lcm_staff = mongo.db.lcm_staff.find_one({'lcmstaff_id': lcmstaff_id})
+    if not lcm_staff:
+        return jsonify({'message': 'LCM staff not found'}), 404
+
+    if request.method == 'PUT':
+        data = request.get_json()
+        updated_lcm_staff = {
+            'firstName': data.get('firstName'),
+            'midName': data.get('midName'),
+            'lastName': data.get('lastName'),
+            'phone': data.get('phone')
+        }
+
+        # firstName: staff?.firstName || '',
+        # midName: staff?.midName || '',
+        # lastName: staff?.lastName || '',
+        # dob: staff?.dob || '',
+        # fileNumber: staff?.fileNumber || '',
+        # department: staff?.department || '',
+        # phone: staff?.phone || '',
+        # staffippissNumber: staff?.staffippissNumber || '',
+        # staffrank: staff?.staffrank || '',
+        # staffsalgrade: staff?.staffsalgrade || '',
+        # staffgender: staff?.staffgender || '',
+        # stafforigin: staff?.stafforigin || '',
+        # qualification: staff?.qualification || ''
+        result = mongo.db.lcm_staff.update_one(
+            {'lcmstaff_id': lcmstaff_id},
+            {'$set': updated_lcm_staff}
+        )
+        if result.modified_count > 0:
+            log_reports(
+                action='edit',
+                staff_id=lcmstaff_id,
+                details=f'LCM staff updated by {current_user.get("username", "Unknown")}({current_user.get("email", "Unknown")}) from {current_user.get("department", "Unknown")} department with File Number of {current_user.get("filenumber", "Unknown")}'
+            )
+            return jsonify({'message': 'LCM staff updated successfully'}), 200
+        else:
+            return jsonify({'message': 'No changes made to the LCM staff'}), 200
+
+    elif request.method == 'DELETE':
+        result = mongo.db.lcm_staff.delete_one({'lcmstaff_id': lcmstaff_id})
+        if result.deleted_count > 0:
+            log_reports( 
+                action='delete',
+                staff_id=lcmstaff_id,
+                details=f'LCM staff deleted by {current_user.get("username", "Unknown")}({current_user.get("email", "Unknown")}) from {current_user.get("department", "Unknown")} department with File\
+                Number of {current_user.get("filenumber", "Unknown")}'
+            )
             
 # old endpoint for edit staff            
 # @app.route('/edit_staff/<string:staff_id>', methods=['GET', 'POST'])
@@ -810,66 +869,79 @@ def add_lcm_staff():
             'message': 'Failed to add LCM staff. Please try again.'
         }), 400
 
+# old list of lcm staff endpoint
+# @app.route('/listlcmstaff', methods=['GET', 'POST'])
+# @login_required
+# def list_Lcm():
+#     """List_Lcm"""
+#     lcm_staff_list = mongo.db.lcm_staff.find()
+#     return render_template('list_lcm.html', title='List of Locum Staffs', staff=lcm_staff_list)
 
-@app.route('/listlcmstaff', methods=['GET', 'POST'])
-@login_required
-def list_Lcm():
-    """List_Lcm"""
-    lcm_staff_list = mongo.db.lcm_staff.find()
-    return render_template('list_lcm.html', title='List of Locum Staffs', staff=lcm_staff_list)
+# new list of lcm staff endpoint
+@app.route('/api/list_lcm_staff', methods=['GET'])
+def list_lcm_staff():
+    lcm_staff_list = list(mongo.db.lcm_staff.find())
+    if not lcm_staff_list:
+        return jsonify({'message': 'No LCM staff found'}), 404
+    else:
+        # Convert MongoDB results to JSON-serializable format
+        return json.loads(json_util.dumps({'staff': lcm_staff_list}))
 
-@app.route('/edit_lcmstaff/<string:staff_id>', methods=['GET', 'POST'])
-@admin_required
-@login_required
-def edit_lcmstaff(staff_id):
-    """This helps edit staff"""
-    userbysession = session.get('email')
-    current_user = mongo.db.user.find_one({'email': userbysession})
-    staff = mongo.db.lcm_staff.find_one({'lcmstaff_id': staff_id})
-    if not staff:
-        flash('Staff not found', 'error')
-        return redirect(url_for('list_Lcm'))
-    if request.method == 'POST':
-        updated_lcmstaff = {
-            'firstName': request.form.get('stafffirstName'),
-            'midName': request.form.get('staffmidName'),
-            'lastName': request.form.get('stafflastName'),
-            'dob': request.form.get('staffdob'),
-            'fileNumber': request.form.get('stafffileNumber'),
-            'department': request.form.get('staffdepartment'),
-            'dateOfApt': request.form.get('staffdateOfApt'),
-            'phone': request.form.get('staffphone')
-        }
-        result = mongo.db.lcm_staff.update_one(
-            {'lcmstaff_id': staff_id},
-            {'$set': updated_lcmstaff}
-        )
-        if result.modified_count > 0:
-            flash('LCM staff updated successfully!', 'success')
-            log_reports(action='edit', staff_id=staff_id, details=f'LCM staff updated by {current_user["username"]}({current_user["email"]}) from {current_user["department"]} department with File Number of {current_user["filenumber"]}')
-        else:
-            flash('No changes made to the LCM staff.', 'info')
+# old edit lcm staff endpoint
+# @app.route('/edit_lcmstaff/<string:staff_id>', methods=['GET', 'POST'])
+# @admin_required
+# @login_required
+# def edit_lcmstaff(staff_id):
+#     """This helps edit staff"""
+#     userbysession = session.get('email')
+#     current_user = mongo.db.user.find_one({'email': userbysession})
+#     staff = mongo.db.lcm_staff.find_one({'lcmstaff_id': staff_id})
+#     if not staff:
+#         flash('Staff not found', 'error')
+#         return redirect(url_for('list_Lcm'))
+#     if request.method == 'POST':
+#         updated_lcmstaff = {
+#             'firstName': request.form.get('stafffirstName'),
+#             'midName': request.form.get('staffmidName'),
+#             'lastName': request.form.get('stafflastName'),
+#             'dob': request.form.get('staffdob'),
+#             'fileNumber': request.form.get('stafffileNumber'),
+#             'department': request.form.get('staffdepartment'),
+#             'dateOfApt': request.form.get('staffdateOfApt'),
+#             'phone': request.form.get('staffphone')
+#         }
+#         result = mongo.db.lcm_staff.update_one(
+#             {'lcmstaff_id': staff_id},
+#             {'$set': updated_lcmstaff}
+#         )
+#         if result.modified_count > 0:
+#             flash('LCM staff updated successfully!', 'success')
+#             log_reports(action='edit', staff_id=staff_id, details=f'LCM staff updated by {current_user["username"]}({current_user["email"]}) from {current_user["department"]} department with File Number of {current_user["filenumber"]}')
+#         else:
+#             flash('No changes made to the LCM staff.', 'info')
         
-        return redirect(url_for('list_Lcm'))
-    return render_template('edit_lcmstaff.html', title="Edit LCM Staff", staff=staff)
-@app.route('/delete_lcmstaff/<string:staff_id>', methods=['GET', 'POST'])
-@admin_required
-@login_required
-def delete_lcmstaff(staff_id):
-    """This helps delete staff"""
-    staff = mongo.db.lcm_staff.find_one({'lcmstaff_id': staff_id})
-    userbysession = session.get('email')
-    current_user = mongo.db.user.find_one({'email': userbysession})
-    if not staff:
-        flash('Staff not found', 'error')
-        return redirect(url_for('list_Lcm'))
-    if request.method == 'POST':
-        mongo.db.lcm_staff.delete_one({'lcmstaff_id': staff_id})
-        flash('Staff deleted successfully!', 'success')
-        log_reports(action='delete', staff_id=staff_id, details=f'LCM staff deleted by {current_user["username"]}({current_user["email"]}) from {current_user["department"]} department with File Number of {current_user["filenumber"]}')
-        print(f"{staff['firstName']} successfully deleted")
-        redirect(url_for('list_Lcm'))
-    return render_template('delete_lcmstaff.html', title='Delete LCM Staff', staff=staff)
+#         return redirect(url_for('list_Lcm'))
+#     return render_template('edit_lcmstaff.html', title="Edit LCM Staff", staff=staff)
+
+# old delete lcm staff endpoint
+# @app.route('/delete_lcmstaff/<string:staff_id>', methods=['GET', 'POST'])
+# @admin_required
+# @login_required
+# def delete_lcmstaff(staff_id):
+#     """This helps delete staff"""
+#     staff = mongo.db.lcm_staff.find_one({'lcmstaff_id': staff_id})
+#     userbysession = session.get('email')
+#     current_user = mongo.db.user.find_one({'email': userbysession})
+#     if not staff:
+#         flash('Staff not found', 'error')
+#         return redirect(url_for('list_Lcm'))
+#     if request.method == 'POST':
+#         mongo.db.lcm_staff.delete_one({'lcmstaff_id': staff_id})
+#         flash('Staff deleted successfully!', 'success')
+#         log_reports(action='delete', staff_id=staff_id, details=f'LCM staff deleted by {current_user["username"]}({current_user["email"]}) from {current_user["department"]} department with File Number of {current_user["filenumber"]}')
+#         print(f"{staff['firstName']} successfully deleted")
+#         redirect(url_for('list_Lcm'))
+#     return render_template('delete_lcmstaff.html', title='Delete LCM Staff', staff=staff)
         
 @app.route('/AddUser', methods=['GET', 'POST'])
 # @login_required

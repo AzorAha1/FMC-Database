@@ -1,4 +1,4 @@
-#!/Users/faisal/Documents/FMC-Database/venv-fmc/bin/python3.12
+#!/Users/faisal/Desktop/FMC-Database/venv-fmc/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

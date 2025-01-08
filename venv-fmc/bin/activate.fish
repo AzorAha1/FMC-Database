@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/Users/faisal/Documents/FMC-Database/venv-fmc"
+set -gx VIRTUAL_ENV "/Users/faisal/Desktop/FMC-Database/venv-fmc"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH

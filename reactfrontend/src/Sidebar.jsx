@@ -131,7 +131,7 @@ const Sidebar = () => {
                 {openMenu.manageLocum && !isCollapsed && (
                     <ul className="pl-8 space-y-2">
                         {collapsedItemInMenu('Add LCM Staff', faUserNurse, '/api/add_lcm_staff')}
-                        {collapsedItemInMenu('List of LCM Staff', faList, '/list_lcm_staff')}
+                        {collapsedItemInMenu('List of LCM Staff', faList, '/api/list_lcm_staff')}
                     </ul>
                 )}
 

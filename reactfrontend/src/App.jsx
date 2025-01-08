@@ -7,6 +7,7 @@ import AddStaff from './AddStaff.jsx';
 import Confirmation from './Confirmation.jsx';
 import Promotion from './Promotion.jsx';
 import AddLcmStaff from './AddLcmStaff.jsx';
+import LcmStaffTable from './ListLcmStaff.jsx';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path='/api/confirmation' element={<Confirmation />}/>
         <Route path='/api/promotion' element={<Promotion />}/>
         <Route path='/api/add_lcm_staff' element={<AddLcmStaff />}/>
+        <Route path='/api/list_lcm_staff' element={<LcmStaffTable />}/>
       </Routes>
     </Router>
   );
