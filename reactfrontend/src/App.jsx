@@ -5,7 +5,8 @@ import Reports from './Reports.jsx';
 import ListStaff from './LIstStaff.jsx';
 import AddStaff from './AddStaff.jsx';
 import Confirmation from './Confirmation.jsx';
-
+import Promotion from './Promotion.jsx';
+import AddLcmStaff from './AddLcmStaff.jsx';
 
 function App() {
   return (
@@ -17,6 +18,8 @@ function App() {
         <Route path="/api/add_staff" element={<AddStaff />} />
         <Route path='/api/liststaffs' element={<ListStaff />}/>
         <Route path='/api/confirmation' element={<Confirmation />}/>
+        <Route path='/api/promotion' element={<Promotion />}/>
+        <Route path='/api/add_lcm_staff' element={<AddLcmStaff />}/>
       </Routes>
     </Router>
   );

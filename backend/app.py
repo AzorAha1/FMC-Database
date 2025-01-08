@@ -1,13 +1,14 @@
 #!/usr/bin/python3
-from datetime import timedelta, datetime, timezone
+from datetime import date, timedelta, datetime, timezone
 from flask_cors import CORS
 from bson import json_util
-
+import os
 from functools import wraps
 from unittest import result
 import bcrypt
 from bson import ObjectId
 from flask import Flask, flash, json, render_template, request, redirect, url_for, session, jsonify
+from werkzeug.utils import secure_filename
 from flask_pymongo import DESCENDING, PyMongo
 import uuid
 from flask import make_response
@@ -25,8 +26,92 @@ CORS(app,
     supports_credentials=True
 )
 
+UPLOAD_FOLDER = './uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
 mongo = PyMongo(app)
 
+#calculate junior promotion
+def calculate_junior_promotion(present_apt):
+    """Calculate promotion"""
+    present_apt_date = present_apt.date()
+
+    #determine the start date for promotion
+    yearofappointment = present_apt_date.year
+    january_first = date(yearofappointment, 1, 1)
+
+    if present_apt_date > january_first:
+        promotion_start_date = date(yearofappointment + 1, 1, 1)
+    else:
+        promotion_start_date = present_apt
+    promotion_eligibility_date = date(promotion_start_date.year + 2, promotion_start_date.month, promotion_start_date.day)
+    return promotion_eligibility_date
+
+# caculate senior promotion
+def calculate_senior_promotion(present_apt):
+    """Calculate promotion"""
+    present_apt_date = present_apt.date()
+
+    #determine the start date for promotion
+    yearofappointment = present_apt_date.year
+    january_first = date(yearofappointment, 1, 1)
+
+    if present_apt_date > january_first:
+        promotion_start_date = date(yearofappointment + 1, 1, 1)
+    else:
+        promotion_start_date = present_apt
+    promotion_eligibility_date = date(promotion_start_date.year + 3, promotion_start_date.month, promotion_start_date.day)
+    return promotion_eligibility_date
+
+# calculate senior management promotion
+def calculate_senior_management_promotion(present_apt):
+    """Calculate promotion"""
+    present_apt_date = present_apt.date()
+
+    #determine the start date for promotion
+    yearofappointment = present_apt_date.year
+    january_first = date(yearofappointment, 1, 1)
+
+    if present_apt_date > january_first:
+        promotion_start_date = date(yearofappointment + 1, 1, 1)
+    else:
+        promotion_start_date = present_apt
+    promotion_eligibility_date = date(promotion_start_date.year + 4, promotion_start_date.month, promotion_start_date.day)
+    return promotion_eligibility_date
+
+# calculate promotion
+def calculate_promotion(staff_data):
+    """Calculate promotion"""
+    try:
+        staff_date_of_present_appointment = datetime.strptime(staff_data['staffdateofpresentapt'], '%Y-%m-%d')
+    except (ValueError, KeyError):
+        return None
+    staff_type = staff_data['stafftype']
+    conhess_level = staff_data['conhessLevel']
+    try:
+        level = conhess_level.split(' ')[-1]
+    except (ValueError, IndexError):
+        return None
+    if staff_type == 'JSA':
+        if level <= 5:
+            return calculate_junior_promotion(staff_date_of_present_appointment)
+    elif staff_type == 'SSA':
+        if level <= 13:
+            return calculate_senior_promotion(staff_date_of_present_appointment)
+    elif staff_type == 'SSA':
+        if level > 13:
+            return calculate_senior_management_promotion(staff_date_of_present_appointment)
+    else:
+        return None
 def login_required(func):
     """this checks for the login status"""
     @wraps(func)
@@ -559,43 +644,172 @@ def confirmation():
         'totalStaffs': total_staffs
     })
 
+# old promotion endpoint 
+# @app.route('/Promotion', methods=['GET', 'POST'])
+# @login_required
+# def promotion():
+#     """Promotion"""
+#     return render_template('promotion.html', title='Promotion')
 
-@app.route('/Promotion', methods=['GET', 'POST'])
-@login_required
+# new promotion endpoint
+@app.route('/api/promotion', methods=['GET', 'POST'])
 def promotion():
-    """Promotion"""
-    return render_template('promotion.html', title='Promotion')
+    print('Promotion endpoint hit!')
+    staff_data = mongo.db.permanent_staff.find()
+    processed_staff = []
+    
+    for staff in staff_data:
+        staff['_id'] = str(staff['_id'])
+        present_apt = datetime.strptime(staff['staffdateofpresentapt'], '%Y-%m-%d')
+        
+        if staff['stafftype'] == 'SSA':  # Junior Staff
+            eligibility_date = calculate_junior_promotion(present_apt)
+        elif staff['stafftype'] == 'JSA':  # Senior Staff
+            eligibility_date = calculate_senior_promotion(present_apt)
+        else:  # Senior Management
+            eligibility_date = calculate_senior_management_promotion(present_apt)
+        
+        staff['promotion_eligibility_date'] = eligibility_date.strftime('%Y-%m-%d')
+        processed_staff.append(staff)
+    
+    return jsonify({
+        'data': processed_staff,
+        'success': True,
+    })
 
-@app.route('/addlcmstaff', methods=['GET', 'POST'])
-@login_required
-def add_lcm():
-    """Add LCM Staff"""
-    print(session)
+@app.route('/api/eligible-promotions', methods=['GET'])
+def eligible_promotions():
+    try:
+        current_date = date.today()
+        staff_data = mongo.db.permanent_staff.find()
+        eligible_staff = []
+        
+        for staff in staff_data:
+            staff['_id'] = str(staff['_id'])  # Convert ObjectId to string
+            present_apt = datetime.strptime(staff['staffdateofpresentapt'], '%Y-%m-%d')
+            
+            if staff['stafftype'] == 'SSA':
+                eligibility_date = calculate_junior_promotion(present_apt)
+            elif staff['stafftype'] == 'JSA':
+                eligibility_date = calculate_senior_promotion(present_apt)
+            else:
+                eligibility_date = calculate_senior_management_promotion(present_apt)
+            
+            staff['promotion_eligibility_date'] = eligibility_date.strftime('%Y-%m-%d')
+            
+            # Check if staff is eligible (current date >= eligibility date)
+            if current_date >= eligibility_date:
+                eligible_staff.append(staff)
+        
+        return jsonify({
+            'data': eligible_staff,
+            'success': True,
+        })
+    except Exception as e:
+        print("Error occurred:", str(e))
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+    
+# old lcm staff endpoint
+# @app.route('/addlcmstaff', methods=['GET', 'POST'])
+# @login_required
+# def add_lcm():
+#     """Add LCM Staff"""
+#     print(session)
+#     unique_id = str(uuid.uuid4())
+#     print(unique_id)
+#     if request.method == 'POST':
+#         staff = {
+#             'lcmstaff_id': unique_id,
+#             'firstName': request.form.get('stafffirstName'),
+#             'midName': request.form.get('staffmidName'),
+#             'lastName': request.form.get('stafflastName'),
+#             'dob': request.form.get('staffdob'),
+#             'fileNumber': request.form.get('filenumber'),
+#             'department': request.form.get('staffDepartment'),
+#             'dateOfApt': request.form.get('staffdoa'),
+#             'phone': request.form.get('staffpno')
+#         }
+#         # Add the staff to the LCM staff list
+#         lcm_staff = mongo.db.lcm_staff.insert_one(staff)
+
+#         if lcm_staff:
+#             print('LCM staff added successfully!')
+#             flash('LCM staff added successfully!', 'success')
+#             return redirect(url_for('list_Lcm'))
+#         else:
+#             print('Failed to add LCM staff. Please try again.', 'danger')
+#             flash('Failed to add LCM staff. Please try again.', 'danger')
+#     return render_template('add_lcm.html', title='Add Locum Staffs')
+
+# new lcm staff endpoint
+@app.route('/api/add_lcm_staff', methods=['POST'])
+def add_lcm_staff():
+    print("add_lcm_staff route hit!")
+    
+    # Handle the incoming form data and file
+    if 'profilePicture' not in request.files:
+        return jsonify({'error': 'No profile picture uploaded'}), 400
+
+    file = request.files['profilePicture']
+    
+    # Validate the file type
+    if file and allowed_file(file.filename):
+        # Secure the filename and save the file
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+        # Ensure the upload folder exists
+        if not os.path.exists(app.config['UPLOAD_FOLDER']):
+            os.makedirs(app.config['UPLOAD_FOLDER'])
+
+        file.save(filepath)
+        print(f"File saved to {filepath}")
+    else:
+        return jsonify({'error': 'Invalid file type'}), 400
+
+    # Now that the file is uploaded, we can handle the rest of the form data
+    data = request.form.to_dict()  # Use request.form to handle form data
+    
     unique_id = str(uuid.uuid4())
-    print(unique_id)
-    if request.method == 'POST':
-        staff = {
-            'lcmstaff_id': unique_id,
-            'firstName': request.form.get('stafffirstName'),
-            'midName': request.form.get('staffmidName'),
-            'lastName': request.form.get('stafflastName'),
-            'dob': request.form.get('staffdob'),
-            'fileNumber': request.form.get('filenumber'),
-            'department': request.form.get('staffDepartment'),
-            'dateOfApt': request.form.get('staffdoa'),
-            'phone': request.form.get('staffpno')
-        }
-        # Add the staff to the LCM staff list
-        lcm_staff = mongo.db.lcm_staff.insert_one(staff)
+    LcmStaff = {
+        'lcmstaff_id': unique_id,
+        'firstName': data.get('stafffirstName'),
+        'midName': data.get('staffmidName'),
+        'lastName': data.get('stafflastName'),
+        'dob': data.get('staffdob'),
+        'fileNumber': data.get('filenumber'),
+        'department': data.get('staffDepartment'),
+        'dateOfApt': data.get('staffdoa'),
+        'phone': data.get('staffpno'),
+        'staffType': data.get('staffType'),
+        'conhessLevel': data.get('conhessLevel'),
+        'salaryGrade': data.get('salary'),
+        'qualification': data.get('qualification'),
+        'gender': data.get('gender'),
+        'rank': data.get('rank'),
+        'staffphone': data.get('staffphone'),
+        'stateOfOrigin': data.get('stateOfOrigin'),
+        'localGovernment': data.get('localGovernment'),
+        'profilePicture': filepath  # Add the file path here
+    }
+   
+    # Insert staff data into the database
+    lcm_staff = mongo.db.lcm_staff.insert_one(LcmStaff)
 
-        if lcm_staff:
-            print('LCM staff added successfully!')
-            flash('LCM staff added successfully!', 'success')
-            return redirect(url_for('list_Lcm'))
-        else:
-            print('Failed to add LCM staff. Please try again.', 'danger')
-            flash('Failed to add LCM staff. Please try again.', 'danger')
-    return render_template('add_lcm.html', title='Add Locum Staffs')
+    if lcm_staff:
+        return jsonify({
+            'success': True,
+            'message': 'LCM staff added successfully!'
+        }), 201
+    else:
+        return jsonify({
+            'success': False,
+            'message': 'Failed to add LCM staff. Please try again.'
+        }), 400
+
 
 @app.route('/listlcmstaff', methods=['GET', 'POST'])
 @login_required

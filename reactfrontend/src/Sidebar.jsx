@@ -107,7 +107,7 @@ const Sidebar = () => {
                 {collapsedItemInMenu('Confirmation', faCheckCircle, '/api/confirmation')}
 
                 {/* Promotion */}
-                {collapsedItemInMenu('Promotion', faArrowUp, '/promotion')}
+                {collapsedItemInMenu('Promotion', faArrowUp, '/api/promotion')}
 
                 {/* Manage Locum Staffs */}
                 <li
@@ -130,7 +130,7 @@ const Sidebar = () => {
                 </li>
                 {openMenu.manageLocum && !isCollapsed && (
                     <ul className="pl-8 space-y-2">
-                        {collapsedItemInMenu('Add LCM Staff', faUserNurse, '/add_lcm_staff')}
+                        {collapsedItemInMenu('Add LCM Staff', faUserNurse, '/api/add_lcm_staff')}
                         {collapsedItemInMenu('List of LCM Staff', faList, '/list_lcm_staff')}
                     </ul>
                 )}
