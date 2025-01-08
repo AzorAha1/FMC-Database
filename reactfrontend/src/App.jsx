@@ -8,6 +8,8 @@ import Confirmation from './Confirmation.jsx';
 import Promotion from './Promotion.jsx';
 import AddLcmStaff from './AddLcmStaff.jsx';
 import LcmStaffTable from './ListLcmStaff.jsx';
+import AddUser from './AddUser.jsx';
+import UserList from './UserList.jsx';
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
         <Route path='/api/promotion' element={<Promotion />}/>
         <Route path='/api/add_lcm_staff' element={<AddLcmStaff />}/>
         <Route path='/api/list_lcm_staff' element={<LcmStaffTable />}/>
+        <Route path='/api/add_user' element={<AddUser/>}/>
+        <Route path='/api/userlist' element={<UserList/>}/>
       </Routes>
     </Router>
   );

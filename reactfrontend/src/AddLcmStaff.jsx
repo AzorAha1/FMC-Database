@@ -91,6 +91,7 @@ const AddLcmStaff = () => {
                 return !value.trim() ? 'State of Origin is required' : '';
             case 'localGovernment':
                 return !value.trim() ? 'Local Government is required' : '';
+
             case 'qualification':
                 return !value.trim() ? 'Qualification is required' : '';
             default:

@@ -156,8 +156,8 @@ const Sidebar = () => {
                 </li>
                 {openMenu.manageUsers && !isCollapsed && (
                     <ul className="pl-8 space-y-2">
-                        {collapsedItemInMenu('Add User', faUserCog, '/add_user')}
-                        {collapsedItemInMenu('User Table', faList, '/user_table')}
+                        {collapsedItemInMenu('Add User', faUserCog, '/api/add_user')}
+                        {collapsedItemInMenu('User Table', faList, '/api/userlist')}
                     </ul>
                 )}
 

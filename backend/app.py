@@ -300,8 +300,22 @@ def dashboard():
 @app.route('/api/add_staff', methods=['POST'])
 def add_staff():
     print("add_staff route hit!") 
-    data = request.get_json()
+    data = request.form.to_dict()
     print(data)
+
+    if 'profilePicture' not in request.files:
+        return jsonify({'error': 'No profile picture uploaded'}), 400
+    
+    file = request.files['ProfilePicture']
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
+
+        file.save(filepath)
+    else:
+        return jsonify({'error': 'Invalid file format. Only PNG, JPG, JPEG and GIF files are allowed'}), 400
 
     # Function to validate and parse date fields
     def parse_date(date_string):
@@ -370,7 +384,8 @@ def add_staff():
         'localgovorigin': data['localgovorigin'],
         'qualification': data['qualification'],
         'conhessLevel': data['conhessLevel'],
-        'confirmation_status': confirmation_status
+        'confirmation_status': confirmation_status,
+        'profilePicture': filepath
     }
     if request.method == 'POST': 
         print(data)    
@@ -943,58 +958,136 @@ def list_lcm_staff():
 #         redirect(url_for('list_Lcm'))
 #     return render_template('delete_lcmstaff.html', title='Delete LCM Staff', staff=staff)
         
-@app.route('/AddUser', methods=['GET', 'POST'])
-# @login_required
-# @admin_required
+# old add user endpoint 
+# @app.route('/AddUser', methods=['GET', 'POST'])
+# # @login_required
+# # @admin_required
+# def add_user():
+#     """Add user"""
+#     users = mongo.db.user.find()
+#     if request.method == 'POST':
+#         email = request.form.get('staffemail')
+#         role = request.form.get('role')
+#         username = request.form.get('username')
+#         filenumber = request.form.get('filenumber')
+#         staffphone = request.form.get('staffpno')
+#         department = request.form.get('userDepartment')
+#         password = request.form.get('password')
+
+#         # Check if all fields are filled
+#         if not all([email, username, filenumber, staffphone, department, password]):
+#             flash("All fields are required", "danger")
+#             return redirect(url_for('add_user'))
+
+#         # Hash the password
+#         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+#         # Ensure the collection is properly assigned
+#         new_user = {
+#             'email': email,
+#             'username': username,
+#             'role': role, 
+#             'filenumber': filenumber,
+#             'staffphone': staffphone,
+#             'department': department,
+#             'password': hashed_password
+#         }
+#         for user in users:
+#             if user['email'] == email:
+#                 flash('User already exists', 'danger')
+#                 print('User already exists')
+#                 return redirect(url_for('add_user'))
+#         else:
+#             flash('User added successfully', 'success')
+#             user = mongo.db.user.insert_one(new_user)
+#             print(f'User added: {user}')
+#             return redirect(url_for('dashboard'))
+
+#     return render_template('add_user.html', title='Add User')
+
+# new add user endpoint 
+@app.route('/api/add_user', methods=['POST'])
 def add_user():
-    """Add user"""
-    users = mongo.db.user.find()
-    if request.method == 'POST':
-        email = request.form.get('staffemail')
-        role = request.form.get('role')
-        username = request.form.get('username')
-        filenumber = request.form.get('filenumber')
-        staffphone = request.form.get('staffpno')
-        department = request.form.get('userDepartment')
-        password = request.form.get('password')
-
-        # Check if all fields are filled
-        if not all([email, username, filenumber, staffphone, department, password]):
-            flash("All fields are required", "danger")
-            return redirect(url_for('add_user'))
-
+    try:
+        data = request.get_json()
+        
+        # Extract fields from request data
+        email = data.get('email')
+        role = data.get('role')
+        username = data.get('username')
+        filenumber = data.get('filenumber')
+        staffphone = data.get('staffphone')
+        department = data.get('department')
+        password = data.get('password')
+        
+        # Check if all required fields are present
+        required_fields = [email, username, filenumber, staffphone, department, password]
+        if not all(required_fields):
+            return jsonify({
+                'success': False,
+                'message': 'All fields are required'
+            }), 400
+            
+        # Check if user already exists
+        existing_user = mongo.db.user.find_one({'email': email})
+        if existing_user:
+            return jsonify({
+                'success': False,
+                'message': 'User with this email already exists'
+            }), 400
+            
         # Hash the password
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
-        # Ensure the collection is properly assigned
+        
+        # Create new user document
         new_user = {
             'email': email,
             'username': username,
-            'role': role, 
+            'role': role,
             'filenumber': filenumber,
             'staffphone': staffphone,
             'department': department,
             'password': hashed_password
         }
-        for user in users:
-            if user['email'] == email:
-                flash('User already exists', 'danger')
-                print('User already exists')
-                return redirect(url_for('add_user'))
+        
+        # Insert user into database
+        result = mongo.db.user.insert_one(new_user)
+        
+        if result.inserted_id:
+            return jsonify({
+                'success': True,
+                'message': 'User added successfully'
+            }), 201
         else:
-            flash('User added successfully', 'success')
-            user = mongo.db.user.insert_one(new_user)
-            print(f'User added: {user}')
-            return redirect(url_for('dashboard'))
-
-    return render_template('add_user.html', title='Add User')
-@app.route('/userlist', methods=['GET', 'POST'])
-@login_required
-@admin_required
+            return jsonify({
+                'success': False,
+                'message': 'Failed to add user'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'An error occurred: {str(e)}'
+        }), 500
+@app.route('/api/userlist', methods=['GET', 'POST'])
+# @login_required
+# @admin_required
 def user_list():
-    """List of Users"""
-    users = mongo.db.user.find()
-    return render_template('user_list.html', title='List of Users', users=users)
+    try:
+        # Just exclude password, all other fields will be included by default
+        users = list(mongo.db.user.find({}, {'password': 0}))
+        
+        return json.loads(json_util.dumps(users)), 200
+        
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+# @login_required
+# @admin_required
+# def user_list():
+#     """List of Users"""
+#     users = mongo.db.user.find()
+#     return render_template('user_list.html', title='List of Users', users=users)
 def log_reports(action, staff_id, details):
     """Log reports"""
     current_time = datetime.utcnow()

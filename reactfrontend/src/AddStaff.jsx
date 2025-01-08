@@ -32,11 +32,30 @@ const AddStaff = () => {
         salaryGrade: '',
         gender: '',
         conhessLevel: '',
+        profilePicture: null
     });
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
+
+    const handlefileChange = (event) => {
+        const file = event.target.files[0]
+        if (file){
+            if (file.size > 1024 * 1024 * 5) {
+                setError('File size should not exceed 5MB');
+                return;
+            }
+            if (!file.type.startsWith('image')) {
+                setError('Only image files are allowed');
+                return;
+            }
+            setStaff(prevState => ({
+                ...prevState,
+                profilePicture: file
+            }))
+        }
+    }
 
     // Staff level configurations
     // const staffLevels = {
@@ -124,6 +143,74 @@ const AddStaff = () => {
         return Object.keys(newErrors).length === 0;
     };
 
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+    //     if (!validateForm()) {
+    //         setError('Please fill all required fields correctly');
+    //         return;
+    //     }
+
+    //     setLoading(true);
+    //     setError(null);
+    //     setSuccess(null);
+
+    //     try {
+    //         // Transform the data to match your API expectations
+    //         const apiData = {
+    //             stafffirstName: staff.firstName,
+    //             staffmidName: staff.middleName,
+    //             stafflastName: staff.lastName,
+    //             stafftype: staff.staffType,
+    //             staffdob: staff.dateOfBirth,
+    //             fileNumber: staff.fileNumber,
+    //             department: staff.department,
+    //             staffdofa: staff.dateOfFirstAppointment, 
+    //             staffdateofpresentapt: staff.dateOfPresentAppointment, 
+    //             staffpno: staff.phoneNumber,
+    //             staffippissNumber: staff.ippissNumber,
+    //             staffrank: staff.rank,
+    //             stafforigin: staff.stateOfOrigin,
+    //             qualification: staff.qualification,
+    //             localgovorigin: staff.localGovernment,
+    //             staffsalgrade: staff.salaryGrade,
+    //             staffgender: staff.gender,
+    //             conhessLevel: staff.conhessLevel,
+    //         };
+
+    //         const response = await axios.post('/api/add_staff', apiData);
+            
+    //         if (response.data.success) {
+    //             setSuccess('Staff added successfully');
+    //             setStaff({
+    //                 firstName: '',
+    //                 middleName: '',
+    //                 lastName: '',
+    //                 staffType: '',
+    //                 dateOfBirth: '',
+    //                 fileNumber: '',
+    //                 department: '',
+    //                 dateOfFirstAppointment: '',
+    //                 dateOfPresentAppointment: '',
+    //                 phoneNumber: '',
+    //                 ippissNumber: '',
+    //                 rank: '',
+    //                 stateOfOrigin: '',
+    //                 qualification: '',
+    //                 localGovernment: '',
+    //                 salaryGrade: '',
+    //                 gender: '',
+    //             });
+    //         } else {
+    //             setError(response.data.message || 'An unknown error occurred');
+    //         }
+    //     } catch (error) {
+    //         console.error('Add staff error:', error);
+    //         setError(error.response?.data?.message || 'An error occurred. Please try again.');
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm()) {
@@ -134,31 +221,22 @@ const AddStaff = () => {
         setLoading(true);
         setError(null);
         setSuccess(null);
-
+        
         try {
-            // Transform the data to match your API expectations
-            const apiData = {
-                stafffirstName: staff.firstName,
-                staffmidName: staff.middleName,
-                stafflastName: staff.lastName,
-                stafftype: staff.staffType,
-                staffdob: staff.dateOfBirth,
-                fileNumber: staff.fileNumber,
-                department: staff.department,
-                staffdofa: staff.dateOfFirstAppointment, 
-                staffdateofpresentapt: staff.dateOfPresentAppointment, 
-                staffpno: staff.phoneNumber,
-                staffippissNumber: staff.ippissNumber,
-                staffrank: staff.rank,
-                stafforigin: staff.stateOfOrigin,
-                qualification: staff.qualification,
-                localgovorigin: staff.localGovernment,
-                staffsalgrade: staff.salaryGrade,
-                staffgender: staff.gender,
-                conhessLevel: staff.conhessLevel,
-            };
+            const formData = new FormData();
+            Object.keys(staff).forEach(key => {
+                if (key === 'profilePicture' && staff[key]) {
+                    formData.append('profilePicture', staff[key]);
+                } else if (staff[key]) {
+                    formData.append(key, staff[key]);
+                }
+            });
 
-            const response = await axios.post('/api/add_staff', apiData);
+            const response = await axios.post('/api/add_staff', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
             
             if (response.data.success) {
                 setSuccess('Staff added successfully');
@@ -180,6 +258,8 @@ const AddStaff = () => {
                     localGovernment: '',
                     salaryGrade: '',
                     gender: '',
+                    conhessLevel: '',
+                    profilePicture: null
                 });
             } else {
                 setError(response.data.message || 'An unknown error occurred');
@@ -554,6 +634,19 @@ const AddStaff = () => {
                             {errors.qualification && (
                                 <p className="mt-1 text-sm text-red-600">{errors.qualification}</p>
                             )}
+                        </div>
+
+                        <div>
+                            <label htmlFor="profilePicture" className="block text-sm font-medium text-gray-700 mb-1">
+                                Profile Picture
+                            </label>
+                            <input
+                                type="file"
+                                name="profilePicture"
+                                id="profilePicture"
+                                onChange={handlefileChange}
+                                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                            />
                         </div>
 
                         <div className="md:col-span-2 flex justify-end mt-6">
