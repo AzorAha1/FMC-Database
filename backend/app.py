@@ -7,7 +7,7 @@ from functools import wraps
 from unittest import result
 import bcrypt
 from bson import ObjectId
-from flask import Flask, flash, json, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, flash, json, render_template, request, redirect, url_for, session, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 from flask_pymongo import DESCENDING, PyMongo
 import uuid
@@ -26,7 +26,10 @@ CORS(app,
     supports_credentials=True
 )
 
-UPLOAD_FOLDER = './uploads'
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -38,6 +41,12 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 mongo = PyMongo(app)
 
+@app.route('/uploads/<filename>')
+def serve_file(filename):
+    try:
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    except FileNotFoundError:
+        return 'File not found', 404
 #calculate junior promotion
 def calculate_junior_promotion(present_apt):
     """Calculate promotion"""
@@ -297,111 +306,291 @@ def dashboard():
 #     return render_template('add_staff.html', title='Add Permanent and Pensionable')
 
 # new add staff endpoint
-@app.route('/api/add_staff', methods=['POST'])
-def add_staff():
-    print("add_staff route hit!") 
-    data = request.form.to_dict()
-    print(data)
+# @app.route('/api/add_staff', methods=['POST'])
+# def add_staff():
+#     print("add_staff route hit!") 
+#     data = request.form.to_dict()
+#     print(data)
 
-    if 'profilePicture' not in request.files:
-        return jsonify({'error': 'No profile picture uploaded'}), 400
+#     if 'profilePicture' not in request.files:
+#         return jsonify({'error': 'No profile picture uploaded'}), 400
     
-    file = request.files['ProfilePicture']
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
+#     file = request.files['profilePicture']
+#     if file and allowed_file(file.filename):
+#         filename = secure_filename(file.filename)
+#         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+#     if not os.path.exists(app.config['UPLOAD_FOLDER']):
+#         os.makedirs(app.config['UPLOAD_FOLDER'])
 
-        file.save(filepath)
-    else:
-        return jsonify({'error': 'Invalid file format. Only PNG, JPG, JPEG and GIF files are allowed'}), 400
+#         file.save(filepath)
+#     else:
+#         return jsonify({'error': 'Invalid file format. Only PNG, JPG, JPEG and GIF files are allowed'}), 400
 
-    # Function to validate and parse date fields
-    def parse_date(date_string):
-        if not date_string:
-            return None  # Return None if no date is provided
-        try:
-            return datetime.strptime(date_string, '%Y-%m-%d')  # Parse the date in YYYY-MM-DD format
-        except ValueError:
-            return None  # Return None if parsing fails
+#     # Function to validate and parse date fields
+#     def parse_date(date_string):
+#         if not date_string:
+#             return None  # Return None if no date is provided
+#         try:
+#             return datetime.strptime(date_string, '%Y-%m-%d')  # Parse the date in YYYY-MM-DD format
+#         except ValueError:
+#             return None  # Return None if parsing fails
 
   
 
-    # Validate and parse date fields
-    staff_date_of_first_appointment = parse_date(data.get('staffdofa'))
-    staff_date_of_present_appointment = parse_date(data.get('staffdateofpresentapt'))
-    staff_dob = parse_date(data.get('staffdob'))
+#     # Validate and parse date fields
+#     staff_date_of_first_appointment = parse_date(data.get('staffdofa'))
+#     staff_date_of_present_appointment = parse_date(data.get('staffdateofpresentapt'))
+#     staff_dob = parse_date(data.get('staffdob'))
 
-    # Check if any required date fields are missing or invalid
-    if staff_date_of_first_appointment is None:
-        return jsonify({
-            'success': False,
-            'message': 'Invalid or missing Date of First Appointment (staffdofa). Expected format: YYYY-MM-DD.'
-        }), 400
-    if staff_date_of_present_appointment is None:
-        return jsonify({
-            'success': False,
-            'message': 'Invalid or missing Date of Present Appointment (staffdopa). Expected format: YYYY-MM-DD.'
-        }), 400
-    if staff_dob is None:
-        return jsonify({
-            'success': False,
-            'message': 'Invalid or missing Date of Birth (staffdob). Expected format: YYYY-MM-DD.'
-        }), 400
+#     # Check if any required date fields are missing or invalid
+#     if staff_date_of_first_appointment is None:
+#         return jsonify({
+#             'success': False,
+#             'message': 'Invalid or missing Date of First Appointment (staffdofa). Expected format: YYYY-MM-DD.'
+#         }), 400
+#     if staff_date_of_present_appointment is None:
+#         return jsonify({
+#             'success': False,
+#             'message': 'Invalid or missing Date of Present Appointment (staffdopa). Expected format: YYYY-MM-DD.'
+#         }), 400
+#     if staff_dob is None:
+#         return jsonify({
+#             'success': False,
+#             'message': 'Invalid or missing Date of Birth (staffdob). Expected format: YYYY-MM-DD.'
+#         }), 400
     
 
 
-    # Define time constants
-    unique_id = str(uuid.uuid4())
-    two_years = timedelta(days=730)
-    current_time = datetime.utcnow()
+#     # Define time constants
+#     unique_id = str(uuid.uuid4())
+#     two_years = timedelta(days=730)
+#     current_time = datetime.utcnow()
 
-    # Check the confirmation status based on the Date of First Appointment
-    if current_time - staff_date_of_first_appointment > two_years:
-        confirmation_status = 'confirmed'
-    else:
-        confirmation_status = 'unconfirmed'
+#     # Check the confirmation status based on the Date of First Appointment
+#     if current_time - staff_date_of_first_appointment > two_years:
+#         confirmation_status = 'confirmed'
+#     else:
+#         confirmation_status = 'unconfirmed'
     
-    # Prepare the staff data
-    staff = {
-        'staff_id': unique_id,
-        'firstName': data['stafffirstName'],
-        'midName': data['staffmidName'],
-        'lastName': data['stafflastName'],
-        'stafftype': data['stafftype'],
-        'dob': staff_dob.strftime('%Y-%m-%d'),  # Save the parsed Date of Birth
-        'fileNumber': data['fileNumber'],
-        'department': data['department'],
-        'staffdateoffirstapt': staff_date_of_first_appointment.strftime('%Y-%m-%d'),  # Save the parsed Date of First Appointment
-        'staffpno': data['staffpno'],
-        'staffippissNumber': data['staffippissNumber'],
-        'staffrank': data['staffrank'],
-        'staffsalgrade': data['staffsalgrade'],
-        'staffdateofpresentapt': staff_date_of_present_appointment.strftime('%Y-%m-%d'),  # Save the parsed Date of Present Appointment
-        'staffgender': data['staffgender'],
-        'stafforigin': data['stafforigin'],
-        'localgovorigin': data['localgovorigin'],
-        'qualification': data['qualification'],
-        'conhessLevel': data['conhessLevel'],
-        'confirmation_status': confirmation_status,
-        'profilePicture': filepath
-    }
-    if request.method == 'POST': 
-        print(data)    
-    # Insert into the database
-    permanent_staff = mongo.db.permanent_staff.insert_one(staff)
+#     # Prepare the staff data
+#     staff = {
+#         'staff_id': unique_id,
+#         'firstName': data['stafffirstName'],
+#         'midName': data['staffmidName'],
+#         'lastName': data['stafflastName'],
+#         'stafftype': data['stafftype'],
+#         'dob': staff_dob.strftime('%Y-%m-%d'),  # Save the parsed Date of Birth
+#         'fileNumber': data['fileNumber'],
+#         'department': data['department'],
+#         'staffdateoffirstapt': staff_date_of_first_appointment.strftime('%Y-%m-%d'),  # Save the parsed Date of First Appointment
+#         'staffpno': data['staffpno'],
+#         'staffippissNumber': data['staffippissNumber'],
+#         'staffrank': data['staffrank'],
+#         'staffsalgrade': data['staffsalgrade'],
+#         'staffdateofpresentapt': staff_date_of_present_appointment.strftime('%Y-%m-%d'),  # Save the parsed Date of Present Appointment
+#         'staffgender': data['staffgender'],
+#         'stafforigin': data['stafforigin'],
+#         'localgovorigin': data['localgovorigin'],
+#         'qualification': data['qualification'],
+#         'conhessLevel': data['conhessLevel'],
+#         'confirmation_status': confirmation_status,
+#         'profilePicture': filepath # adds profile picture to mongodb staff document
+#     }
+#     if request.method == 'POST': 
+#         print(data)    
+#     # Insert into the database
+#     permanent_staff = mongo.db.permanent_staff.insert_one(staff)
 
-    if permanent_staff:
-        return jsonify({
-            'success': True,
-            'message': 'Permanent staff added successfully!'
-        }), 201
-    else:
+#     if permanent_staff:
+#         return jsonify({
+#             'success': True,
+#             'message': 'Permanent staff added successfully!'
+#         }), 201
+#     else:
+#         return jsonify({
+#             'success': False,
+#             'message': 'Failed to add Permanent staff. Please try again.'
+#         }), 400
+
+@app.route('/api/add_staff', methods=['POST'])
+def add_staff():
+    try:
+        print("add_staff route hit!")
+        data = request.form.to_dict()
+        print("Received data:", data)
+
+        # File handling
+        profile_picture_filename = None
+        if 'profilePicture' in request.files:
+            file = request.files['profilePicture']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                profile_picture_filename = filename
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'Invalid file format. Only PNG, JPG, JPEG and GIF files are allowed'
+                }), 400
+
+        # Function to validate and parse date fields
+        def parse_date(date_string):
+            if not date_string:
+                return None
+            try:
+                return datetime.strptime(date_string, '%Y-%m-%d')
+            except ValueError as e:
+                print(f"Date parsing error: {str(e)}")
+                return None
+
+        # Parse all date fields
+        staff_date_of_first_appointment = parse_date(data.get('staffdofa'))
+        staff_date_of_present_appointment = parse_date(data.get('staffdateofpresentapt'))
+        staff_dob = parse_date(data.get('staffdob'))
+
+        # Validate required date fields
+        if staff_date_of_first_appointment is None:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid or missing Date of First Appointment (staffdofa). Expected format: YYYY-MM-DD.'
+            }), 400
+        
+        if staff_date_of_present_appointment is None:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid or missing Date of Present Appointment (staffdateofpresentapt). Expected format: YYYY-MM-DD.'
+            }), 400
+        
+        if staff_dob is None:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid or missing Date of Birth (staffdob). Expected format: YYYY-MM-DD.'
+            }), 400
+
+        # Calculate confirmation status
+        two_years = timedelta(days=730)
+        current_time = datetime.utcnow()
+        confirmation_status = 'confirmed' if current_time - staff_date_of_first_appointment > two_years else 'unconfirmed'
+
+        # Validate required fields
+        required_fields = [
+            'stafffirstName',
+            'stafflastName',
+            'stafftype',
+            'fileNumber',
+            'department',
+            'staffpno',
+            'staffippissNumber',
+            'staffrank',
+            'staffsalgrade',
+            'staffgender',
+            'stafforigin',
+            'localgovorigin',
+            'qualification',
+            'conhessLevel'
+        ]
+
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({
+                    'success': False,
+                    'message': f'Missing required field: {field}'
+                }), 400
+
+        # Prepare staff document
+        staff = {
+            'staff_id': str(uuid.uuid4()),
+            'firstName': data['stafffirstName'],
+            'midName': data.get('staffmidName', ''),
+            'lastName': data['stafflastName'],
+            'stafftype': data['stafftype'],
+            'dob': staff_dob.strftime('%Y-%m-%d'),
+            'fileNumber': data['fileNumber'],
+            'department': data['department'],
+            'staffdateoffirstapt': staff_date_of_first_appointment.strftime('%Y-%m-%d'),
+            'staffpno': data['staffpno'],
+            'staffippissNumber': data['staffippissNumber'],
+            'staffrank': data['staffrank'],
+            'staffsalgrade': data['staffsalgrade'],
+            'staffdateofpresentapt': staff_date_of_present_appointment.strftime('%Y-%m-%d'),
+            'staffgender': data['staffgender'],
+            'stafforigin': data['stafforigin'],
+            'localgovorigin': data['localgovorigin'],
+            'qualification': data['qualification'],
+            'conhessLevel': data['conhessLevel'],
+            'confirmation_status': confirmation_status,
+            'created_at': current_time,
+            'updated_at': current_time
+        }
+
+        # Add profile picture filename if file was uploaded
+        if profile_picture_filename:
+            staff['profilePicture'] = profile_picture_filename
+
+        # Validate phone number format
+        phone_number = data.get('staffpno', '')
+        if not phone_number.isdigit() or len(phone_number) != 11:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid phone number format. Must be 11 digits.'
+            }), 400
+
+        # Validate IPPISS number
+        ippiss_number = data.get('staffippissNumber', '')
+        if not ippiss_number.isdigit():
+            return jsonify({
+                'success': False,
+                'message': 'Invalid IPPISS number format. Must contain only digits.'
+            }), 400
+
+        try:
+            # Insert into database
+            permanent_staff = mongo.db.permanent_staff.insert_one(staff)
+            
+            if permanent_staff:
+                return jsonify({
+                    'success': True,
+                    'message': 'Permanent staff added successfully!',
+                    'staff_id': str(permanent_staff.inserted_id)
+                }), 201
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'Failed to add Permanent staff. Database insertion failed.'
+                }), 400
+
+        except Exception as db_error:
+            print(f"Database error: {str(db_error)}")
+            # If database insertion fails, delete uploaded file if it exists
+            if profile_picture_filename:
+                try:
+                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], profile_picture_filename)
+                    if os.path.exists(filepath):
+                        os.remove(filepath)
+                except Exception as file_error:
+                    print(f"Failed to delete file after database error: {str(file_error)}")
+            
+            return jsonify({
+                'success': False,
+                'message': 'Database error occurred while adding staff.'
+            }), 500
+
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+        # Clean up file if it was uploaded but processing failed
+        if profile_picture_filename:
+            try:
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], profile_picture_filename)
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+            except Exception as cleanup_error:
+                print(f"Failed to clean up file after error: {str(cleanup_error)}")
+        
         return jsonify({
             'success': False,
-            'message': 'Failed to add Permanent staff. Please try again.'
-        }), 400
+            'message': f'An unexpected error occurred: {str(e)}'
+        }), 500
 # @app.route('/confirm_staff/<string:staff_id>', methods=['GET', 'POST'])
 # @admin_required
 # @login_required
@@ -675,10 +864,15 @@ def confirmation():
         'midName': 1,
         'lastName': 1,
         'fileNumber': 1,
+        'department': 1,  # Added
         'stafftype': 1,
         'staffsalgrade': 1,
-        'confirmation_status': 1,
-        'staffdateoffirstapt': 1
+        'staffrank': 1,   # Added
+        'conhessLevel': 1,  # Added
+        'staffdateoffirstapt': 1,
+        'staffdateofpresentapt': 1,  # Added
+        'profilePicture': 1,  # Added
+        'confirmation_status': 1
     }).skip(skip).limit(limit)
     total_staffs = mongo.db.permanent_staff.count_documents({})
     totalPages = (total_staffs // limit) + (1 if total_staffs % limit > 0 else 0)
@@ -690,6 +884,13 @@ def confirmation():
         dateoffirstapt = datetime.strptime(staff['staffdateoffirstapt'], '%Y-%m-%d')
         days_until_confirmation = (dateoffirstapt + two_years - current_date).days
         isEligible = days_until_confirmation <= 0
+
+        profile_picture = staff.get('profilePicture')
+        if profile_picture:
+            # Remove any path components and just use the filename
+            profile_picture = profile_picture.split('/')[-1]
+            profile_picture = f'/uploads/{profile_picture}'
+
         
         newstatus = 'confirmed' if isEligible else 'unconfirmed'
         if staff.get('confirmation_status') != newstatus:
@@ -699,18 +900,23 @@ def confirmation():
             )
 
         result.append({
-            'staff_id': staff['staff_id'],
-            'firstName': staff.get('firstName', ''),
-            'midName': staff.get('midName', ''),
-            'lastName': staff.get('lastName', ''),
-            'fileNumber': staff.get('fileNumber', ''),
-            'stafftype': staff.get('stafftype', ''),
-            'salaryLevel': staff.get('staffsalgrade', ''),
-            'dateoffirstapt': staff['staffdateoffirstapt'],
-            'isEligible': isEligible,
-            'daysUntilConfirmation': max(0, days_until_confirmation),
-            'confirmation_status': newstatus
-        })
+        'staff_id': staff['staff_id'],
+        'firstName': staff.get('firstName', ''),
+        'midName': staff.get('midName', ''),
+        'lastName': staff.get('lastName', ''),
+        'fileNumber': staff.get('fileNumber', ''),
+        'department': staff.get('department', ''),
+        'stafftype': staff.get('stafftype', ''),
+        'staffsalgrade': staff.get('staffsalgrade', ''),
+        'staffrank': staff.get('staffrank', ''),
+        'conhessLevel': staff.get('conhessLevel', ''),
+        'staffdateoffirstapt': staff['staffdateoffirstapt'],
+        'staffdateofpresentapt': staff.get('staffdateofpresentapt', ''),
+        'profilePicture': profile_picture,
+        'isEligible': isEligible,
+        'daysUntilConfirmation': max(0, days_until_confirmation),
+        'confirmation_status': newstatus
+    })
     return jsonify({
         'data': result,
         'totalPages': totalPages,

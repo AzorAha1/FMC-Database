@@ -217,21 +217,45 @@ const AddStaff = () => {
             setError('Please fill all required fields correctly');
             return;
         }
-
+    
         setLoading(true);
         setError(null);
         setSuccess(null);
         
         try {
             const formData = new FormData();
+            
+            // Map the frontend fields to backend expected fields
+            const fieldMapping = {
+                firstName: 'stafffirstName',
+                middleName: 'staffmidName',
+                lastName: 'stafflastName',
+                staffType: 'stafftype',
+                dateOfBirth: 'staffdob',
+                fileNumber: 'fileNumber',
+                department: 'department',
+                dateOfFirstAppointment: 'staffdofa',
+                dateOfPresentAppointment: 'staffdateofpresentapt',
+                phoneNumber: 'staffpno',
+                ippissNumber: 'staffippissNumber',
+                rank: 'staffrank',
+                stateOfOrigin: 'stafforigin',
+                qualification: 'qualification',
+                localGovernment: 'localgovorigin',
+                salaryGrade: 'staffsalgrade',
+                gender: 'staffgender',
+                conhessLevel: 'conhessLevel'
+            };
+    
+            // Add mapped fields to FormData
             Object.keys(staff).forEach(key => {
                 if (key === 'profilePicture' && staff[key]) {
                     formData.append('profilePicture', staff[key]);
-                } else if (staff[key]) {
-                    formData.append(key, staff[key]);
+                } else if (staff[key] && fieldMapping[key]) {
+                    formData.append(fieldMapping[key], staff[key]);
                 }
             });
-
+    
             const response = await axios.post('/api/add_staff', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
@@ -271,7 +295,6 @@ const AddStaff = () => {
             setLoading(false);
         }
     };
-
     return (
         <div className="flex justify-center min-h-screen bg-gray-50">
             <Sidebar />

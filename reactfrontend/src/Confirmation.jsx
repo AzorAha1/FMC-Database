@@ -1,6 +1,8 @@
+// Updated Frontend Component (Confirmation.jsx)
 import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar.jsx";
 import axios from "./api/axios.js";
+import { User } from "lucide-react";
 
 const Confirmation = () => {
     const [staffList, setStaffList] = useState([]);
@@ -15,9 +17,16 @@ const Confirmation = () => {
         setLoading(true);
         try {
             const response = await axios.get(`/api/confirmation?page=${page}&limit=10`);
-            setStaffList(response.data.data);
+            // Ensure profile picture URLs are absolute
+            const staffWithFullUrls = response.data.data.map(staff => ({
+                ...staff,
+                profilePicture: staff.profilePicture 
+                    ? `${axios.defaults.baseURL}${staff.profilePicture}`
+                    : null
+            }));
+            setStaffList(staffWithFullUrls);
             setTotalPages(response.data.totalPages);
-            setTotalStaff(response.data.totalStaff);
+            setTotalStaff(response.data.totalStaffs);
         } catch (err) {
             setError("Failed to fetch staff data. Please try again.");
             console.error("Fetch error:", err);
@@ -37,117 +46,187 @@ const Confirmation = () => {
     const pendingStaff = staffList.filter((staff) => !staff.isEligible);
     const confirmedStaff = staffList.filter((staff) => staff.isEligible);
 
-    const StaffCard = ({ staff, isPending }) => (
-        <div className="relative p-4 mb-4 border rounded bg-white shadow-sm hover:shadow-md transition-shadow">
-            <div className="grid grid-cols-2 gap-4">
-                <p><strong>Staff ID:</strong> {staff.staff_id}</p>
-                <p><strong>File Number:</strong> {staff.fileNumber}</p>
-                <p><strong>Full Name:</strong> {staff.firstName} {staff.midName} {staff.lastName}</p>
-                <p><strong>Grade:</strong> {staff.salaryLevel}</p>
-                <p><strong>Staff Type:</strong> {staff.stafftype}</p>
-                <p><strong>Date of First Appointment:</strong> {staff.dateoffirstapt}</p>
-            </div>
-            
-            {isPending && (
-                <div className="absolute top-0 right-0 bg-red-500 text-white text-xs px-2 py-1 rounded-full m-3">
-                    {staff.daysUntilConfirmation} days left
+    const StaffCard = ({ staff, isPending }) => {
+        const [imageError, setImageError] = useState(false);
+
+        const handleImageError = (e) => {
+            console.log("Image failed to load:", staff.profilePicture);
+            setImageError(true);
+            e.target.onerror = null; // Prevent infinite error loop
+        };
+
+        const ProfileImage = () => {
+            if (!staff.profilePicture || imageError) {
+                return (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                        <User className="w-12 h-12 text-gray-400" />
+                    </div>
+                );
+            }
+
+            return (
+                <img
+                    src={staff.profilePicture}
+                    alt={`${staff.firstName} ${staff.lastName}`}
+                    className="w-full h-full object-cover"
+                    onError={handleImageError}
+                />
+            );
+        };
+
+        return (
+            <div className="relative p-6 mb-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex gap-6">
+                    {/* Profile Picture Section */}
+                    <div className="flex-shrink-0">
+                        <div className="w-32 h-32 rounded-lg overflow-hidden bg-gray-100 border">
+                            <ProfileImage />
+                        </div>
+                    </div>
+
+                    {/* Rest of the card content remains the same */}
+                    <div className="flex-grow grid grid-cols-2 gap-4">
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                {staff.firstName} {staff.midName} {staff.lastName}
+                            </h3>
+                            <div className="space-y-2">
+                                <p className="text-sm text-gray-600">
+                                    <span className="font-medium">Staff ID:</span> {staff.staff_id}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                    <span className="font-medium">File Number:</span> {staff.fileNumber}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                    <span className="font-medium">Department:</span> {staff.department}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                    <span className="font-medium">Staff Type:</span> {staff.stafftype}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <p className="text-sm text-gray-600">
+                                <span className="font-medium">Grade Level:</span> {staff.conhessLevel}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                                <span className="font-medium">Salary Grade:</span> {staff.staffsalgrade}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                                <span className="font-medium">Rank:</span> {staff.staffrank}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                                <span className="font-medium">First Appointment:</span>{" "}
+                                {new Date(staff.staffdateoffirstapt).toLocaleDateString()}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                                <span className="font-medium">Present Appointment:</span>{" "}
+                                {new Date(staff.staffdateofpresentapt).toLocaleDateString()}
+                            </p>
+                        </div>
+                    </div>
                 </div>
-            )}
-        </div>
-    );
+                
+                {/* Status Indicators */}
+                {isPending ? (
+                    <div className="absolute top-4 right-4 bg-red-500 text-white text-xs px-3 py-1 rounded-full">
+                        {staff.daysUntilConfirmation} days left
+                    </div>
+                ) : (
+                    <div className="absolute top-4 right-4 bg-green-500 text-white text-xs px-3 py-1 rounded-full">
+                        Confirmed
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+        );
+    }
 
     if (error) {
         return (
-            <div className="flex justify-center items-center min-h-screen bg-gray-50">
-                <div className="p-4 bg-red-50 text-red-600 rounded-lg">
-                    {error}
-                    <button 
-                        onClick={getStaffsfromendpoint}
-                        className="ml-4 text-sm underline hover:no-underline"
-                    >
-                        Retry
-                    </button>
-                </div>
+            <div className="p-4 text-red-500 bg-red-50 rounded-md">
+                {error}
             </div>
         );
     }
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
+        <div className="flex h-screen bg-gray-100">
             <Sidebar />
-            <div className="flex-1 p-6 max-w-7xl">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold">Confirmation Status</h1>
-                    <p className="text-gray-600">Total Staff: {totalStaff}</p>
-                </div>
-                
-                <div className="flex border-b mb-6">
-                    <button
-                        className={`px-6 py-3 font-medium ${
-                            activeTab === "pending"
-                                ? "border-b-2 border-blue-500 text-blue-500"
-                                : "text-gray-600 hover:text-blue-500"
-                        }`}
-                        onClick={() => setActiveTab("pending")}
-                    >
-                        Pending ({pendingStaff.length})
-                    </button>
-                    <button
-                        className={`px-6 py-3 font-medium ${
-                            activeTab === "confirmed"
-                                ? "border-b-2 border-green-500 text-green-500"
-                                : "text-gray-600 hover:text-green-500"
-                        }`}
-                        onClick={() => setActiveTab("confirmed")}
-                    >
-                        Confirmed ({confirmedStaff.length})
-                    </button>
-                </div>
-
-                {loading ? (
-                    <div className="flex justify-center py-8">
-                        <div className="animate-pulse text-gray-500">Loading...</div>
+            <div className="flex-1 overflow-auto p-8">
+                <div className="max-w-6xl mx-auto">
+                    <h1 className="text-2xl font-bold mb-6">Staff Confirmation Status</h1>
+                    
+                    {/* Tab Navigation */}
+                    <div className="flex gap-4 mb-6">
+                        <button
+                            className={`px-4 py-2 rounded-lg ${
+                                activeTab === "pending"
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-gray-200 text-gray-700"
+                            }`}
+                            onClick={() => setActiveTab("pending")}
+                        >
+                            Pending ({pendingStaff.length})
+                        </button>
+                        <button
+                            className={`px-4 py-2 rounded-lg ${
+                                activeTab === "confirmed"
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-gray-200 text-gray-700"
+                            }`}
+                            onClick={() => setActiveTab("confirmed")}
+                        >
+                            Confirmed ({confirmedStaff.length})
+                        </button>
                     </div>
-                ) : (
+
+                    {/* Staff List */}
                     <div className="space-y-4">
-                        {activeTab === "pending" ? (
-                            pendingStaff.length === 0 ? (
-                                <p className="text-gray-500 text-center py-8">No pending confirmations</p>
-                            ) : (
-                                pendingStaff.map(staff => (
-                                    <StaffCard key={staff.staff_id} staff={staff} isPending={true} />
-                                ))
-                            )
-                        ) : (
-                            confirmedStaff.length === 0 ? (
-                                <p className="text-gray-500 text-center py-8">No confirmed staff members</p>
-                            ) : (
-                                confirmedStaff.map(staff => (
-                                    <StaffCard key={staff.staff_id} staff={staff} isPending={false} />
-                                ))
-                            )
-                        )}
+                        {activeTab === "pending"
+                            ? pendingStaff.map((staff) => (
+                                  <StaffCard
+                                      key={staff.staff_id}
+                                      staff={staff}
+                                      isPending={true}
+                                  />
+                              ))
+                            : confirmedStaff.map((staff) => (
+                                  <StaffCard
+                                      key={staff.staff_id}
+                                      staff={staff}
+                                      isPending={false}
+                                  />
+                              ))}
                     </div>
-                )}
 
-                <div className="flex justify-center items-center mt-6 gap-4">
-                    <button
-                        onClick={() => handlePageChange(page - 1)}
-                        disabled={page <= 1 || loading}
-                        className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-                    >
-                        Previous
-                    </button>
-                    <span className="px-4 py-2 bg-white border rounded">
-                        Page {page} of {totalPages}
-                    </span>
-                    <button
-                        onClick={() => handlePageChange(page + 1)}
-                        disabled={page >= totalPages || loading}
-                        className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-                    >
-                        Next
-                    </button>
+                    {/* Pagination */}
+                    <div className="flex justify-center gap-2 mt-6">
+                        <button
+                            onClick={() => handlePageChange(page - 1)}
+                            disabled={page === 1}
+                            className="px-4 py-2 rounded bg-gray-200 disabled:opacity-50"
+                        >
+                            Previous
+                        </button>
+                        <span className="px-4 py-2">
+                            Page {page} of {totalPages}
+                        </span>
+                        <button
+                            onClick={() => handlePageChange(page + 1)}
+                            disabled={page === totalPages}
+                            className="px-4 py-2 rounded bg-gray-200 disabled:opacity-50"
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
