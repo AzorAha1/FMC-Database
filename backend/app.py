@@ -47,93 +47,66 @@ def serve_file(filename):
         return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
     except FileNotFoundError:
         return 'File not found', 404
-#calculate junior promotion
-def calculate_junior_promotion(present_apt):
-    """Calculate promotion"""
-    present_apt_date = present_apt.date()
 
-    #determine the start date for promotion
-    yearofappointment = present_apt_date.year
-    january_first = date(yearofappointment, 1, 1)
 
+def calculate_promotion_start_date(present_apt):
+    """Calculate the promotion start date based on appointment date"""
+    present_apt_date = present_apt.date() if isinstance(present_apt, datetime) else present_apt
+    year_of_appointment = present_apt_date.year
+    january_first = date(year_of_appointment, 1, 1)
+    
     if present_apt_date > january_first:
-        promotion_start_date = date(yearofappointment + 1, 1, 1)
-    else:
-        promotion_start_date = present_apt
-    promotion_eligibility_date = date(promotion_start_date.year + 2, promotion_start_date.month, promotion_start_date.day)
-    return promotion_eligibility_date
+        return date(year_of_appointment + 1, 1, 1)
+    return present_apt_date
 
-# caculate senior promotion
-def calculate_senior_promotion(present_apt):
-    """Calculate promotion"""
-    present_apt_date = present_apt.date()
+def calculate_promotion_eligibility(present_apt, years_required):
+    """Calculate promotion eligibility based on start date and required years"""
+    start_date = calculate_promotion_start_date(present_apt)
+    return date(start_date.year + years_required, start_date.month, start_date.day)
 
-    #determine the start date for promotion
-    yearofappointment = present_apt_date.year
-    january_first = date(yearofappointment, 1, 1)
-
-    if present_apt_date > january_first:
-        promotion_start_date = date(yearofappointment + 1, 1, 1)
-    else:
-        promotion_start_date = present_apt
-    promotion_eligibility_date = date(promotion_start_date.year + 3, promotion_start_date.month, promotion_start_date.day)
-    return promotion_eligibility_date
-
-# calculate senior management promotion
-def calculate_senior_management_promotion(present_apt):
-    """Calculate promotion"""
-    present_apt_date = present_apt.date()
-
-    #determine the start date for promotion
-    yearofappointment = present_apt_date.year
-    january_first = date(yearofappointment, 1, 1)
-
-    if present_apt_date > january_first:
-        promotion_start_date = date(yearofappointment + 1, 1, 1)
-    else:
-        promotion_start_date = present_apt
-    promotion_eligibility_date = date(promotion_start_date.year + 4, promotion_start_date.month, promotion_start_date.day)
-    return promotion_eligibility_date
-
-# calculate promotion
-def calculate_promotion(staff_data):
-    """Calculate promotion"""
+def get_conhess_level(conhess_str):
+    """Extract numeric level from CONHESS string"""
     try:
-        staff_date_of_present_appointment = datetime.strptime(staff_data['staffdateofpresentapt'], '%Y-%m-%d')
+        return int(conhess_str.split(' ')[-1])
+    except (ValueError, IndexError):
+        return 0
+
+def calculate_promotion(staff_data):
+    """Calculate promotion eligibility date based on staff type and level"""
+    try:
+        present_apt = datetime.strptime(staff_data['staffdateofpresentapt'], '%Y-%m-%d')
+        staff_type = staff_data['stafftype']
+        conhess_level = get_conhess_level(staff_data['conhessLevel'])
+        
+        if staff_type == 'JSA':
+            return calculate_promotion_eligibility(present_apt, 2)  # 2 years for junior staff
+        elif staff_type == 'SSA':
+            if conhess_level <= 13:
+                return calculate_promotion_eligibility(present_apt, 3)  # 3 years for senior staff
+            else:
+                return calculate_promotion_eligibility(present_apt, 4)  # 4 years for senior management
+        return None
     except (ValueError, KeyError):
         return None
-    staff_type = staff_data['stafftype']
-    conhess_level = staff_data['conhessLevel']
-    try:
-        level = conhess_level.split(' ')[-1]
-    except (ValueError, IndexError):
-        return None
-    if staff_type == 'JSA':
-        if level <= 5:
-            return calculate_junior_promotion(staff_date_of_present_appointment)
-    elif staff_type == 'SSA':
-        if level <= 13:
-            return calculate_senior_promotion(staff_date_of_present_appointment)
-    elif staff_type == 'SSA':
-        if level > 13:
-            return calculate_senior_management_promotion(staff_date_of_present_appointment)
-    else:
-        return None
+
+
 def login_required(func):
-    """this checks for the login status"""
+    """Checks if the user is logged in."""
     @wraps(func)
     def wrapper(*args, **kwargs):
         if 'email' not in session:
-            return redirect(url_for('login'))
+            # Return a JSON response for API calls
+            return jsonify({'error': 'Unauthorized', 'redirect': '/api/login'}), 401
         return func(*args, **kwargs)
     return wrapper
 
-
 def admin_required(func):
+    """Checks if the user is an admin."""
     @wraps(func)
     def wrapper(*args, **kwargs):
         if session.get('role') != 'admin-user':
-            return redirect(url_for('dashboard'))
+            # Return a JSON response for API calls
+            return jsonify({'error': 'Forbidden', 'redirect': '/api/dashboard'}), 403
         return func(*args, **kwargs)
     return wrapper
 def confirmationofstaff():
@@ -168,42 +141,43 @@ def confirmationofstaff():
 #     return render_template('login.html', title='Login')
 
 @app.route('/api/test', methods=['GET'])
+@login_required
+@admin_required
 def test():
     return jsonify({"message": "Test successful"})
 @app.route('/', methods=['GET'])
-@app.route('/api/login', methods=['POST', 'GET'])
+@app.route('/api/login', methods=['POST'])
 def login():
-    if request.method == 'OPTIONS':
-        # Handle preflight request
-        response = jsonify({'status': 'ok'})
-        response.headers.add('Access-Control-Allow-Origin', 'http://localhost:5173')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'POST,GET,OPTIONS')
-        response.headers.add('Access-Control-Allow-Credentials', 'true')
-        return response
-
     data = request.json
     email = data.get('email')
     password = data.get('password')
     role = data.get('role')
+    remember_me = data.get('rememberMe', False)  # Get "Remember Me" value
 
     user_collection = mongo.db.user
     user = user_collection.find_one({'email': email})
     
     if user and bcrypt.checkpw(password.encode('utf-8'), user['password']):
-        if user.get('role') == 'admin-user' or user.get('role') == role:
+        if user.get('role') == 'admin-user' or user.get('role') == 'user':
             session['email'] = email
-            session['role'] = role
+            session['role'] = user['role']
+
+            # Set session permanence based on "Remember Me"
+            if remember_me:
+                session.permanent = True
+                app.permanent_session_lifetime = timedelta(days=30)  # 30 days
+            else:
+                session.permanent = False  # Session expires when browser closes
+
             response = jsonify({
                 'success': True, 
                 'redirectUrl': url_for('dashboard'),
                 'user': {
                     'email': email,
-                    'role': role,
+                    'role': user.get('role'),
                     'isAdmin': user.get('role') == 'admin-user'
                 }
             })
-            # Add CORS headers to the response
             response.headers.add('Access-Control-Allow-Origin', 'http://localhost:5173')
             response.headers.add('Access-Control-Allow-Credentials', 'true')
             return response
@@ -217,7 +191,12 @@ def login():
         'success': False, 
         'message': 'Invalid email or password'
     }), 401
-
+@app.route('/api/check-auth', methods=['GET'])
+def check_auth():
+    if 'email' in session:
+        return jsonify({'role': session.get('role')}), 200
+    else:
+        return jsonify({'error': 'Session expired', 'redirect': '/login'}), 401
 # old endpoint for dashboard
 # @app.route('/dashboard', methods=['GET', 'POST'])
 # # @login_required
@@ -239,6 +218,7 @@ def login():
 
 # new dashboard endpoint
 @app.route('/api/dashboard', methods=['GET', 'POST'])
+@login_required
 def dashboard():
     lcm_staff_count = mongo.db.lcm_staff.count_documents({})
     total_permenentstaff_count = mongo.db.permanent_staff.count_documents({})
@@ -252,167 +232,11 @@ def dashboard():
         'totalUsers': total_users
     })
 
-# old endpoint for add staff
-# @app.route('/addstaff', methods=['GET', 'POST'])
-# @login_required
-# def staff():
-#     """Add Staff"""
-#     print(session)
-#     unique_id = str(uuid.uuid4())
-#     print(unique_id)
-#     user_email = session.get('email')
-#     user = mongo.db.user.find_one({'email': user_email})
-#     if not user:
-#         return redirect(url_for('login'))
-#     if request.method == 'POST':
-#         two_years = timedelta(days=730)
-#         current_time = datetime.utcnow()
-#         staff_date_of_first_appointment = datetime.strptime(request.form.get('staffdofa'), '%Y-%m-%d')
-#         if current_time - staff_date_of_first_appointment > two_years:
-#             confirmation_status = 'confirmed'
-#         else:
-#             confirmation_status = 'unconfirmed'
-#         staff = {
-#             'staff_id': unique_id,
-#             'firstName': request.form.get('stafffirstName'),
-#             'midName': request.form.get('staffmidName'),
-#             'lastName': request.form.get('stafflastName'),
-#             'stafftype': request.form.get('stafftype'),
-#             'dob': request.form.get('staffdob'),
-#             'fileNumber': request.form.get('fileNumber'),
-#             'department': request.form.get('department'),
-#             'staffdateoffirstapt': request.form.get('staffdofa'),
-#             'phone': request.form.get('staffpno'),
-#             'staffippissNumber': request.form.get('staffippissNumber'),
-#             'staffrank': request.form.get('staffrank'),
-#             'staffsalgrade': request.form.get('staffsalgrade'),
-#             'staffdateofpresentapt': request.form.get('staffdopa'),
-#             'staffgender': request.form.get('staffgender'),
-#             'stafforigin': request.form.get('stafforigin'),
-#             'localgovorigin': request.form.get('localgovorigin'),
-#             'qualification': request.form.get('qualification'),
-#             'confirmation_status': confirmation_status
-#         }
-      
-#         permanent_staff = mongo.db.permanent_staff.insert_one(staff)
-
-#         if permanent_staff:
-#             print('Permanent staff added successfully!')
-#             flash('Permanent staff added successfully!', 'success')
-#             return redirect(url_for('table_list'))
-#         else:
-#             print('Failed to add Permanent staff. Please try again.', 'danger')
-#             flash('Failed to add Permanent staff. Please try again.', 'danger')
-#     return render_template('add_staff.html', title='Add Permanent and Pensionable')
-
-# new add staff endpoint
-# @app.route('/api/add_staff', methods=['POST'])
-# def add_staff():
-#     print("add_staff route hit!") 
-#     data = request.form.to_dict()
-#     print(data)
-
-#     if 'profilePicture' not in request.files:
-#         return jsonify({'error': 'No profile picture uploaded'}), 400
-    
-#     file = request.files['profilePicture']
-#     if file and allowed_file(file.filename):
-#         filename = secure_filename(file.filename)
-#         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-#     if not os.path.exists(app.config['UPLOAD_FOLDER']):
-#         os.makedirs(app.config['UPLOAD_FOLDER'])
-
-#         file.save(filepath)
-#     else:
-#         return jsonify({'error': 'Invalid file format. Only PNG, JPG, JPEG and GIF files are allowed'}), 400
-
-#     # Function to validate and parse date fields
-#     def parse_date(date_string):
-#         if not date_string:
-#             return None  # Return None if no date is provided
-#         try:
-#             return datetime.strptime(date_string, '%Y-%m-%d')  # Parse the date in YYYY-MM-DD format
-#         except ValueError:
-#             return None  # Return None if parsing fails
-
-  
-
-#     # Validate and parse date fields
-#     staff_date_of_first_appointment = parse_date(data.get('staffdofa'))
-#     staff_date_of_present_appointment = parse_date(data.get('staffdateofpresentapt'))
-#     staff_dob = parse_date(data.get('staffdob'))
-
-#     # Check if any required date fields are missing or invalid
-#     if staff_date_of_first_appointment is None:
-#         return jsonify({
-#             'success': False,
-#             'message': 'Invalid or missing Date of First Appointment (staffdofa). Expected format: YYYY-MM-DD.'
-#         }), 400
-#     if staff_date_of_present_appointment is None:
-#         return jsonify({
-#             'success': False,
-#             'message': 'Invalid or missing Date of Present Appointment (staffdopa). Expected format: YYYY-MM-DD.'
-#         }), 400
-#     if staff_dob is None:
-#         return jsonify({
-#             'success': False,
-#             'message': 'Invalid or missing Date of Birth (staffdob). Expected format: YYYY-MM-DD.'
-#         }), 400
-    
 
 
-#     # Define time constants
-#     unique_id = str(uuid.uuid4())
-#     two_years = timedelta(days=730)
-#     current_time = datetime.utcnow()
-
-#     # Check the confirmation status based on the Date of First Appointment
-#     if current_time - staff_date_of_first_appointment > two_years:
-#         confirmation_status = 'confirmed'
-#     else:
-#         confirmation_status = 'unconfirmed'
-    
-#     # Prepare the staff data
-#     staff = {
-#         'staff_id': unique_id,
-#         'firstName': data['stafffirstName'],
-#         'midName': data['staffmidName'],
-#         'lastName': data['stafflastName'],
-#         'stafftype': data['stafftype'],
-#         'dob': staff_dob.strftime('%Y-%m-%d'),  # Save the parsed Date of Birth
-#         'fileNumber': data['fileNumber'],
-#         'department': data['department'],
-#         'staffdateoffirstapt': staff_date_of_first_appointment.strftime('%Y-%m-%d'),  # Save the parsed Date of First Appointment
-#         'staffpno': data['staffpno'],
-#         'staffippissNumber': data['staffippissNumber'],
-#         'staffrank': data['staffrank'],
-#         'staffsalgrade': data['staffsalgrade'],
-#         'staffdateofpresentapt': staff_date_of_present_appointment.strftime('%Y-%m-%d'),  # Save the parsed Date of Present Appointment
-#         'staffgender': data['staffgender'],
-#         'stafforigin': data['stafforigin'],
-#         'localgovorigin': data['localgovorigin'],
-#         'qualification': data['qualification'],
-#         'conhessLevel': data['conhessLevel'],
-#         'confirmation_status': confirmation_status,
-#         'profilePicture': filepath # adds profile picture to mongodb staff document
-#     }
-#     if request.method == 'POST': 
-#         print(data)    
-#     # Insert into the database
-#     permanent_staff = mongo.db.permanent_staff.insert_one(staff)
-
-#     if permanent_staff:
-#         return jsonify({
-#             'success': True,
-#             'message': 'Permanent staff added successfully!'
-#         }), 201
-#     else:
-#         return jsonify({
-#             'success': False,
-#             'message': 'Failed to add Permanent staff. Please try again.'
-#         }), 400
-
-@app.route('/api/add_staff', methods=['POST'])
+@app.route('/api/add_staff', methods=['GET', 'POST'])
+@login_required
+# @admin_required
 def add_staff():
     try:
         print("add_staff route hit!")
@@ -591,41 +415,11 @@ def add_staff():
             'success': False,
             'message': f'An unexpected error occurred: {str(e)}'
         }), 500
-# @app.route('/confirm_staff/<string:staff_id>', methods=['GET', 'POST'])
-# @admin_required
-# @login_required
-# def confirm_staff(staff_id):
-#     userbysession = session.get('email')
-#     current_user = mongo.db.user.find_one({'email': userbysession})
-#     staff = mongo.db.permanent_staff.find_one({'staff_id': staff_id})
-#     if not staff:
-#         flash('Staff not found', 'error')
-#         return redirect(url_for('table_list'))
-#     staff_date_of_first_appointment = datetime.strptime(staff['staffdateoffirstapt'], '%Y-%m-%d')
-#     two_years = timedelta(days=730)
-#     current_time = datetime.utcnow()
-#     if current_time - staff_date_of_first_appointment > two_years:
-#         if staff['confirmation_status'] == 'unconfirmed':
-#             if request.method == 'POST':
-#                 mongo.db.permanent_staff.update_one(
-#                     {'staff_id': staff_id},
-#                     {'$set': {'confirmation_status': 'confirmed'}}
-#                     )
-#                 flash('Staff confirmed successfully!', 'success')
-#                 return redirect(url_for('Confirmation'))
-#         else:
-#             flash('Staff is already confirmed', 'info')
-#             return redirect(url_for('Confirmation'))
-#         return render_template('confirm_staff.html', title='Confirm Staff', staff=staff)
-#     else:
-#         remaining_days = (staff_date_of_first_appointment + two_years - current_time).days
-#         flash(f'Staff is not due for confirmation. {remaining_days} days remaining', 'info')
-#         return redirect(url_for('Confirmaton'))
-        
-
 
 #new endpoint to edit and delete staff
 @app.route('/api/manage_staff/<string:staff_id>', methods=['GET', 'PUT', 'DELETE'])
+@login_required
+@admin_required
 def manage_staff(staff_id):
     """Manage staff by editing or deleting"""
     userbysession = session.get('email')
@@ -688,6 +482,8 @@ def manage_staff(staff_id):
 
 # manage lcm staff by edit and delete
 @app.route('/api/manage_lcm_staff/<string:lcmstaff_id>', methods=['GET', 'PUT', 'DELETE'])
+@login_required
+@admin_required
 def manage_lcm_staff(lcmstaff_id):
     """Manage LCM staff by editing or deleting"""
     userbysession = session.get('email')
@@ -815,6 +611,7 @@ def manage_lcm_staff(lcmstaff_id):
 
 # new list of staff endpoint
 @app.route('/api/liststaffs', methods=['GET', 'POST'])
+@login_required
 def list_staff():
     permanent_staff_list = list(mongo.db.permanent_staff.find())
     if not permanent_staff_list:
@@ -853,8 +650,10 @@ def list_staff():
 from datetime import datetime, timedelta
 # new confirmation endpoint
 @app.route('/api/confirmation', methods=['GET', 'POST'])
+@login_required
 def confirmation():
     """confirmation endpoint"""
+    print(session)
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 10))
     skip = (page - 1) * limit
@@ -933,6 +732,7 @@ def confirmation():
 
 # new promotion endpoint
 @app.route('/api/promotion', methods=['GET', 'POST'])
+@login_required
 def promotion():
     print('Promotion endpoint hit!')
     staff_data = mongo.db.permanent_staff.find()
@@ -940,17 +740,11 @@ def promotion():
     
     for staff in staff_data:
         staff['_id'] = str(staff['_id'])
-        present_apt = datetime.strptime(staff['staffdateofpresentapt'], '%Y-%m-%d')
+        eligibility_date = calculate_promotion(staff)
         
-        if staff['stafftype'] == 'SSA':  # Junior Staff
-            eligibility_date = calculate_junior_promotion(present_apt)
-        elif staff['stafftype'] == 'JSA':  # Senior Staff
-            eligibility_date = calculate_senior_promotion(present_apt)
-        else:  # Senior Management
-            eligibility_date = calculate_senior_management_promotion(present_apt)
-        
-        staff['promotion_eligibility_date'] = eligibility_date.strftime('%Y-%m-%d')
-        processed_staff.append(staff)
+        if eligibility_date:
+            staff['promotion_eligibility_date'] = eligibility_date.strftime('%Y-%m-%d')
+            processed_staff.append(staff)
     
     return jsonify({
         'data': processed_staff,
@@ -958,6 +752,7 @@ def promotion():
     })
 
 @app.route('/api/eligible-promotions', methods=['GET'])
+@login_required
 def eligible_promotions():
     try:
         current_date = date.today()
@@ -965,21 +760,13 @@ def eligible_promotions():
         eligible_staff = []
         
         for staff in staff_data:
-            staff['_id'] = str(staff['_id'])  # Convert ObjectId to string
-            present_apt = datetime.strptime(staff['staffdateofpresentapt'], '%Y-%m-%d')
+            staff['_id'] = str(staff['_id'])
+            eligibility_date = calculate_promotion(staff)
             
-            if staff['stafftype'] == 'SSA':
-                eligibility_date = calculate_junior_promotion(present_apt)
-            elif staff['stafftype'] == 'JSA':
-                eligibility_date = calculate_senior_promotion(present_apt)
-            else:
-                eligibility_date = calculate_senior_management_promotion(present_apt)
-            
-            staff['promotion_eligibility_date'] = eligibility_date.strftime('%Y-%m-%d')
-            
-            # Check if staff is eligible (current date >= eligibility date)
-            if current_date >= eligibility_date:
-                eligible_staff.append(staff)
+            if eligibility_date:
+                staff['promotion_eligibility_date'] = eligibility_date.strftime('%Y-%m-%d')
+                if current_date >= eligibility_date:
+                    eligible_staff.append(staff)
         
         return jsonify({
             'data': eligible_staff,
@@ -1026,6 +813,8 @@ def eligible_promotions():
 
 # new lcm staff endpoint
 @app.route('/api/add_lcm_staff', methods=['POST'])
+@login_required
+@admin_required
 def add_lcm_staff():
     print("add_lcm_staff route hit!")
     
@@ -1100,6 +889,7 @@ def add_lcm_staff():
 
 # new list of lcm staff endpoint
 @app.route('/api/list_lcm_staff', methods=['GET'])
+@login_required
 def list_lcm_staff():
     lcm_staff_list = list(mongo.db.lcm_staff.find())
     if not lcm_staff_list:
@@ -1213,6 +1003,8 @@ def list_lcm_staff():
 
 # new add user endpoint 
 @app.route('/api/add_user', methods=['POST'])
+@login_required
+@admin_required
 def add_user():
     try:
         data = request.get_json()
@@ -1276,8 +1068,8 @@ def add_user():
             'message': f'An error occurred: {str(e)}'
         }), 500
 @app.route('/api/userlist', methods=['GET', 'POST'])
-# @login_required
-# @admin_required
+@login_required
+@admin_required
 def user_list():
     try:
         # Just exclude password, all other fields will be included by default
@@ -1317,17 +1109,22 @@ def log_reports(action, staff_id, details):
 
 # new reports endpoint
 @app.route('/api/reports', methods=['GET', 'POST'])
+@login_required
 def reports():
     reports = list(mongo.db.reports.find().sort('date', DESCENDING))
     print("Sample report date:", reports[0]['date'] if reports else None)  # Debug print
     return json_util.dumps({'reports': reports})
-@app.route('/logout', methods=['GET'])
+
+@app.route('/api/logout', methods=['GET'])
 def logout():
-    """Logout"""
-    session.pop('email', None)
-    print('Session cleared:', session) 
-    print('User is logged out')
-    return redirect(url_for('login'))
+    """Logout the user by clearing the session."""
+    session.pop('email', None)  # Clear the user's email from the session
+    session.pop('role', None)   # Clear the user's role from the session
+    session.clear()             # Clear the entire session
+    print('Session cleared:', session)  # Debugging: Print the session after clearing
+    print('User is logged out')         # Debugging: Confirm logout
+    return jsonify({'success': True, 'redirectUrl': url_for('login')}) 
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5003, host='0.0.0.0')

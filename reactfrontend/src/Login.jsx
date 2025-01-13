@@ -1,48 +1,45 @@
 import React, { useState } from 'react';
 import bgimage from './assets/2.jpg';
-import axios from '../src/api/axios';
-
+import { useAuth } from './AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
 
 const LoginForm = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState('clinical-services');
+    const [role, setRole] = useState(null); // Initialize role as null
     const [errorMessage, setErrorMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
+    const { login } = useAuth();
 
     const navigate = useNavigate();
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setErrorMessage('');
-    
+
+        // Validate email and password
         if (!email || !password) {
             setErrorMessage('Please enter both email and password');
             setLoading(false);
             return;
         }
-    
+
+        // Validate role
+        if (!role) {
+            setErrorMessage('Please select a role');
+            setLoading(false);
+            return;
+        }
+
         try {
-            const response = await axios.post('/api/login', { 
-                email, 
-                password, 
-                role,
-            });
-    
-            if (response.data.success) {
-                console.log('Redirect URL:', response.data.redirectUrl);
-                
-                // Extract the path from the full URL
-                const redirectPath = new URL(response.data.redirectUrl, window.location.origin).pathname;
-                
-                // Log the extracted path for debugging
-                console.log('Extracted Path:', redirectPath);
-                navigate(redirectPath);
+            const result = await login(email, password, role, rememberMe);
+            if (result.success) {
+                navigate(result.redirectUrl || '/api/dashboard');
             } else {
-                setErrorMessage(response.data.message || 'An unknown error occurred');
+                setErrorMessage(result.error || 'An unknown error occurred');
             }
         } catch (error) {
             console.error('Login error:', error);
@@ -54,7 +51,7 @@ const LoginForm = () => {
 
     const roles = [
         { id: 'admin-user', label: 'Admin' },
-        { id: 'regular-user', label: 'Regular Staff'},
+        { id: 'user', label: 'Regular Staff' },
     ];
 
     return (
@@ -90,6 +87,7 @@ const LoginForm = () => {
                     {roles.map((roleOption) => (
                         <button
                             key={roleOption.id}
+                            type="button" // Add type="button" to prevent form submission
                             className={`
                                 px-4 py-2 rounded-lg transition duration-300
                                 ${role === roleOption.id
@@ -116,6 +114,7 @@ const LoginForm = () => {
                             onChange={(e) => setEmail(e.target.value)}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Enter your email"
+                            required // Make email field required
                         />
                     </div>
 
@@ -131,6 +130,7 @@ const LoginForm = () => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 placeholder="Enter your password"
+                                required // Make password field required
                             />
                             <button
                                 type="button"

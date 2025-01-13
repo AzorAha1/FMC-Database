@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import axios from './api/axios.js';
+import { useAuth } from './AuthContext.jsx';
+
 import {
     faChartLine,
     faChartBar,
@@ -24,9 +27,10 @@ const Sidebar = () => {
         manageLocum: false,
         manageUsers: false,
     });
-
+    const { logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+    const {userRole} = useAuth();
 
     const toggleSidebar = () => setIsCollapsed(!isCollapsed);
 
@@ -39,12 +43,28 @@ const Sidebar = () => {
 
     const isActive = (path) => location.pathname === path;
 
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/');
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
+
     const collapsedItemInMenu = (title, icon, endpoint) => (
         <li
             className={`flex items-center space-x-4 p-2 rounded cursor-pointer ${
                 isActive(endpoint) ? 'bg-blue-600 text-white' : 'hover:bg-gray-700'
             }`}
-            onClick={() => endpoint && navigate(endpoint)}
+            // onClick={() => endpoint && navigate(endpoint)}
+            onClick={() => {
+                if (endpoint === '/api/logout') {
+                    handleLogout(); // Handle logout separately
+                } else {
+                    navigate(endpoint); // Navigate to other endpoints
+                }
+            }}
         >
             <FontAwesomeIcon icon={icon} className="text-lg" />
             {!isCollapsed && <span>{title}</span>}
@@ -134,35 +154,38 @@ const Sidebar = () => {
                         {collapsedItemInMenu('List of LCM Staff', faList, '/api/list_lcm_staff')}
                     </ul>
                 )}
-
-                {/* Manage Users */}
-                <li
-                    className="flex items-center justify-between p-2 hover:bg-gray-700 rounded cursor-pointer"
-                    onClick={() => toggleSubMenu('manageUsers')}
-                    aria-expanded={openMenu.manageUsers}
-                >
-                    <div className="flex items-center space-x-4">
-                        <FontAwesomeIcon icon={faUsers} className="text-lg" />
-                        {!isCollapsed && <span>Manage Users</span>}
-                    </div>
-                    {!isCollapsed && (
-                        <FontAwesomeIcon
-                            icon={faChevronDown}
-                            className={`text-sm transform transition-transform ${
-                                openMenu.manageUsers ? 'rotate-180' : ''
-                            }`}
-                        />
-                    )}
-                </li>
-                {openMenu.manageUsers && !isCollapsed && (
-                    <ul className="pl-8 space-y-2">
-                        {collapsedItemInMenu('Add User', faUserCog, '/api/add_user')}
-                        {collapsedItemInMenu('User Table', faList, '/api/userlist')}
-                    </ul>
+                {userRole === 'admin-user' && (
+                    <>
+                        {/* Manage Users */}
+                        <li
+                            className="flex items-center justify-between p-2 hover:bg-gray-700 rounded cursor-pointer"
+                            onClick={() => toggleSubMenu('manageUsers')}
+                            aria-expanded={openMenu.manageUsers}
+                        >
+                            <div className="flex items-center space-x-4">
+                                <FontAwesomeIcon icon={faUsers} className="text-lg" />
+                                {!isCollapsed && <span>Manage Users</span>}
+                            </div>
+                            {!isCollapsed && (
+                                <FontAwesomeIcon
+                                    icon={faChevronDown}
+                                    className={`text-sm transform transition-transform ${
+                                        openMenu.manageUsers ? 'rotate-180' : ''
+                                    }`}
+                                />
+                            )}
+                        </li>
+                        {openMenu.manageUsers && !isCollapsed && (
+                            <ul className="pl-8 space-y-2">
+                                {collapsedItemInMenu('Add User', faUserCog, '/api/add_user')}
+                                {collapsedItemInMenu('User Table', faList, '/api/userlist')}
+                            </ul>
+                        )}
+                    </>
                 )}
-
+                
                 {/* Logout */}
-                {collapsedItemInMenu('Logout', faSignOutAlt, '/logout')}
+                {collapsedItemInMenu('Logout', faSignOutAlt, '/api/logout')}
             </ul>
         </aside>
     );

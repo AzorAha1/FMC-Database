@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "./api/axios.js";
 import Sidebar from "./Sidebar.jsx";
 import EditStaff from "./EditStaff.jsx";
+import { useAuth } from "./AuthContext.jsx";
 
 const StaffTable = () => {
   const [staffData, setStaffData] = useState([]);
@@ -9,7 +10,7 @@ const StaffTable = () => {
   const [editingStaff, setEditingStaff] = useState(null);
   const [isEditWindowOpen, setIsEditWindowOpen] = useState(false);
   const [error, setError] = useState(null);
-
+  const { userRole } = useAuth();
   useEffect(() => {
     const fetchStaffData = async () => {
       try {
@@ -31,6 +32,7 @@ const StaffTable = () => {
   }
 
   const handleSaveEdit = async (updatedData) => {
+
     try {
         const editeddata = {
             staff_id: editingStaff.staff_id,
@@ -141,7 +143,9 @@ const handleDelete = async (staffId) => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      {(userRole === 'admin') && (
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -168,18 +172,23 @@ const handleDelete = async (staffId) => {
                           {staff.staffsalgrade}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
-                        <button
+                        {userRole === 'admin' && (
+                            <button
                             onClick={() => handleEdit(staff)}
                             className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-full hover:bg-blue-100 transition-colors mr-2"
-                        >
-                            Edit
-                        </button>
-                          <button
+                            >
+                              Edit
+                            </button>
+                        )}
+                        {userRole === 'admin' && (
+                            <button
                             onClick={() => handleDelete(staff.staff_id)}
                             className="inline-flex items-center px-3 py-1 bg-red-50 text-red-700 rounded-full hover:bg-red-100 transition-colors"
-                          >
-                            Delete
-                          </button>
+                            >
+                              Delete
+                            </button>
+                        )}
+                          
                         </td>
                       </tr>
                     ))}

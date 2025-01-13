@@ -84,3 +84,31 @@
 #             print(f'{key} - {value.quantity}')
 #     return cart
 
+# {
+#     _id: ObjectId('6780d9bfe469b043b1e20d02'),
+#     staff_id: 'fe244388-cc11-4aa6-bd36-452805fbce26',
+#     firstName: 'Bashir',
+#     midName: '',
+#     lastName: 'Adamu',
+#     stafftype: 'SSA',
+#     dob: '2000-01-10',
+#     fileNumber: '338',
+#     department: 'IT',
+#     staffdateoffirstapt: '2001-01-01',
+#     staffpno: '08036304601',
+#     staffippissNumber: '177510',
+#     staffrank: 'Chief Program Analyst',
+#     staffsalgrade: 'CONHESS 12/10',
+#     staffdateofpresentapt: '2023-01-01',
+#     staffgender: 'Male',
+#     stafforigin: 'Kano',
+#     localgovorigin: 'Kano Municipal',
+#     qualification: 'Software Engineer',
+#     conhessLevel: 'CONHESS 12',
+#     confirmation_status: 'confirmed',
+#     created_at: ISODate('2025-01-10T08:26:39.344Z'),
+#     updated_at: ISODate('2025-01-10T08:26:39.344Z'),
+#     profilePicture: 'unnamed.jpg'
+#   }
+# ]
+# fmc-database> db.permanent_staff.find()
