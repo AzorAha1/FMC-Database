@@ -3,6 +3,8 @@ import axios from './api/axios';
 import { Activity, Users, UserCheck, User } from 'lucide-react';
 import Sidebar from './Sidebar';
 import img from './assets/3.jpg';
+import { useNavigate } from 'react-router-dom';
+
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -13,7 +15,7 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const navigate = useNavigate()
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -118,13 +120,13 @@ const Dashboard = () => {
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h3>
             <div className="grid grid-cols-2 gap-4">
-              <button className="p-4 bg-blue-50 rounded-lg text-blue-600 hover:bg-blue-100 transition-colors">
+              <button className="p-4 bg-blue-50 rounded-lg text-blue-600 hover:bg-blue-100 transition-colors" onClick={() => navigate('/api/add_staff')}>
                 Add New Staff
               </button>
-              <button className="p-4 bg-green-50 rounded-lg text-green-600 hover:bg-green-100 transition-colors">
+              <button className="p-4 bg-green-50 rounded-lg text-green-600 hover:bg-green-100 transition-colors" onClick={() => navigate('/api/reports')}>
                 View Reports
               </button>
-              <button className="p-4 bg-purple-50 rounded-lg text-purple-600 hover:bg-purple-100 transition-colors">
+              <button className="p-4 bg-purple-50 rounded-lg text-purple-600 hover:bg-purple-100 transition-colors" onClick={() => navigate('/api/add_user')}>
                 Manage Users
               </button>
               <button className="p-4 bg-orange-50 rounded-lg text-orange-600 hover:bg-orange-100 transition-colors">

@@ -8,19 +8,24 @@ const Promotion = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState('all'); // 'all' or 'eligible'
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalstaffs, setTotalstaffs] = useState(0);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true);
                 const [promotionResponse, eligibleResponse] = await Promise.all([
-                    axios.get('/api/promotion'),
-                    axios.get('/api/eligible-promotions')
+                    axios.get(`/api/promotion?page=${page}&limit=10`),
+                    axios.get(`/api/eligible-promotions?page=${page}&limit=10`),
                 ]);
 
                 if (promotionResponse.data.success && eligibleResponse.data.success) {
                     setPromotionData(promotionResponse.data.data);
                     setEligibleStaff(eligibleResponse.data.data);
+                    setTotalPages(promotionResponse.data.totalPages);
+                    setTotalstaffs(promotionResponse.data.totalstaffs);
                     setError(null);
                 } else {
                     setError('Failed to fetch promotion data');
@@ -33,7 +38,11 @@ const Promotion = () => {
         };
 
         fetchData();
-    }, []);
+    }, [page]);
+
+    const handlepagechange = (newPage) => {
+        setPage(newPage);
+    }
 
     const displayData = activeTab === 'all' ? promotionData : eligibleStaff;
 
@@ -120,13 +129,40 @@ const Promotion = () => {
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Name
+                                        Surname
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Staff Type
+                                        Other Name(s)
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Rank
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Salary Grade
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Staff Number
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        DOB
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        DOFA
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        DOPA
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Gender
+                                    </th>
+                                    <th className='px6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                                        LGA
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Eligibility Date
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        State of Origin
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Status
@@ -150,17 +186,63 @@ const Promotion = () => {
                                         >
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm font-medium text-gray-900">
-                                                    {`${staff.firstName || ''} ${staff.midName || ''} ${staff.lastName || ''}`}
+                                                   {staff.lastName}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-medium text-gray-900">
+                                                    {staff.firstName} {staff.midName}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-medium text-gray-900">
+                                                    {staff.staffrank}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-medium text-gray-900">
+                                                    {staff.staffsalgrade}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm text-gray-900">
-                                                    {staff.stafftype}
+                                                    {`${staff.stafftype}-${staff.fileNumber}`}
                                                 </div>
                                             </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-medium text-gray-900">
+                                                    {staff.dob}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-medium text-gray-900">
+                                                   {staff.staffdateoffirstapt}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-medium text-gray-900">
+                                                   {staff.staffdateofpresentapt}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-medium text-gray-900">
+                                                   {staff.staffgender}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-medium text-gray-900">
+                                                   {staff.localgovorigin}
+                                                </div>
+                                            </td>
+                                           
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm text-gray-900">
                                                     {staff.promotion_eligibility_date}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm text-gray-900">
+                                                    {staff.stafforigin}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
@@ -188,7 +270,28 @@ const Promotion = () => {
                             </tbody>
                         </table>
                     </div>
+                    
                 )}
+                 {/* Pagination */}
+                 <div className="flex justify-center gap-2 mt-6">
+                    <button
+                        onClick={() => handlepagechange(page - 1)}
+                        disabled={page === 1}
+                        className="px-4 py-2 rounded bg-gray-200 disabled:opacity-50"
+                    >
+                        Previous
+                    </button>
+                    <span className="px-4 py-2">
+                        Page {page} of {totalPages}
+                    </span>
+                    <button
+                        onClick={() => handlepagechange(page + 1)}
+                        disabled={page === totalPages}
+                        className="px-4 py-2 rounded bg-gray-200 disabled:opacity-50"
+                    >
+                        Next
+                    </button>
+                </div>
             </div>
         </div>
     );

@@ -38,7 +38,7 @@ function App() {
           <Route 
             path="/api/add_staff" 
             element={
-              <ProtectedRoute adminRequired>
+              <ProtectedRoute>
                 <AddStaff />
               </ProtectedRoute>
             } 
@@ -70,7 +70,7 @@ function App() {
           <Route 
             path='/api/add_lcm_staff' 
             element={
-              <ProtectedRoute adminRequired>
+              <ProtectedRoute>
                 <AddLcmStaff />
               </ProtectedRoute>
             }

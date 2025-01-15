@@ -608,11 +608,12 @@ def manage_lcm_staff(lcmstaff_id):
 #     """List of Staff"""
 #     permanent_staff_list = mongo.db.permanent_staff.find()
 #     return render_template('list.html', title='List of Permanent and Pensionable', staff=permanent_staff_list)
-
-# new list of staff endpoint
 @app.route('/api/liststaffs', methods=['GET', 'POST'])
 @login_required
 def list_staff():
+    """list of staffs"""
+    # page = int(request.args.get('page', 1))
+    # limit = int(request.args.get('limit'), 1)
     permanent_staff_list = list(mongo.db.permanent_staff.find())
     if not permanent_staff_list:
         return jsonify({'message': 'No staff found'}), 404
@@ -735,9 +736,15 @@ def confirmation():
 @login_required
 def promotion():
     print('Promotion endpoint hit!')
-    staff_data = mongo.db.permanent_staff.find()
+    page = int(request.args.get('page', 1))
+    limit = int(request.args.get('limit', 10))
+    skip = (page - 1) * limit  
+    staff_data = mongo.db.permanent_staff.find().skip(skip).limit(limit)
+    total_staffs = mongo.db.permanent_staff.count_documents({})
+    total_pages = (total_staffs // limit) + (1 if total_staffs % limit > 0 else 0)
     processed_staff = []
     
+      
     for staff in staff_data:
         staff['_id'] = str(staff['_id'])
         eligibility_date = calculate_promotion(staff)
@@ -748,6 +755,9 @@ def promotion():
     
     return jsonify({
         'data': processed_staff,
+        'totalPages': total_pages,
+        'currentPage': page,
+        'totalStaffs': total_staffs,
         'success': True,
     })
 
@@ -755,8 +765,13 @@ def promotion():
 @login_required
 def eligible_promotions():
     try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+        skip = (page - 1) * limit
         current_date = date.today()
-        staff_data = mongo.db.permanent_staff.find()
+        staff_data = mongo.db.permanent_staff.find().skip(skip).limit(limit)
+        total_staffs = mongo.db.permanent_staff.count_documents({})
+        total_pages = (total_staffs // limit) + (1 if total_staffs % limit > 0 else 0)
         eligible_staff = []
         
         for staff in staff_data:
@@ -770,6 +785,9 @@ def eligible_promotions():
         
         return jsonify({
             'data': eligible_staff,
+            'totalPages': total_pages,
+            'currentPage': page,
+            'totalStaffs': total_staffs,
             'success': True,
         })
     except Exception as e:
@@ -814,7 +832,7 @@ def eligible_promotions():
 # new lcm staff endpoint
 @app.route('/api/add_lcm_staff', methods=['POST'])
 @login_required
-@admin_required
+# @admin_required
 def add_lcm_staff():
     print("add_lcm_staff route hit!")
     
