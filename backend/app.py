@@ -754,46 +754,6 @@ def confirm_staff(staff_id):
     )
     return jsonify({'message': 'Staff confirmed successfully'}), 200
 
-@app.route('/api/dont_confirm_staff/<staff_id>', methods=['POST'])
-@login_required
-def dont_confirm_staff(staff_id):
-    if not staff_id:
-        return jsonify({'error': 'Staff ID is required'}), 400
-
-    # Fetch the staff member's current data
-    staff = mongo.db.permanent_staff.find_one({'staff_id': staff_id})
-    if not staff:
-        return jsonify({'error': 'Staff not found'}), 404
-
-    # Validate the current status
-    if staff.get('confirmation_status') != 'awaiting_confirmation':
-        return jsonify({'error': 'Staff is not eligible for cancellation'}), 400
-
-    # Get the current daysUntilConfirmation (default to 0 if not present)
-    current_days_until_confirmation = staff.get('daysUntilConfirmation', 0)
-
-    # Add 365 days to daysUntilConfirmation
-    new_days_until_confirmation = current_days_until_confirmation + 365
-
-    # Update the staff record in the database
-    mongo.db.permanent_staff.update_one(
-        {'staff_id': staff_id},
-        {
-            '$set': {
-                'confirmation_status': 'unconfirmed',  # Update status
-                'daysUntilConfirmation': new_days_until_confirmation  # Add 365 days
-            }
-        }
-    )
-
-    return jsonify({'message': 'Staff confirmation cancelled and 1 year added successfully'}), 200# old promotion endpoint 
-# @app.route('/Promotion', methods=['GET', 'POST'])
-# @login_required
-# def promotion():
-#     """Promotion"""
-#     return render_template('promotion.html', title='Promotion')
-
-# new promotion endpoint
 @app.route('/api/promotion', methods=['GET', 'POST'])
 @login_required
 def promotion():

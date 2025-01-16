@@ -78,7 +78,7 @@ const Confirmation = () => {
         // Handle Confirm Staff
         const handleConfirmStaff = async (staffId) => {
             try {
-                const response = await axios.post(`http://localhost:5003/api/confirm_staff/${staffId}`);
+                const response = await axios.post(`/api/confirm_staff/${staffId}`);
                 if (response.status !== 200) {
                     throw new Error(response.data.error || 'Failed to confirm staff');
                 }
@@ -89,20 +89,7 @@ const Confirmation = () => {
             }
         };
 
-        // Handle Don’t Confirm Staff
-        const handleDontConfirmStaff = async (staffId) => {
-            try {
-                const response = await axios.post(`http://localhost:5003/api/dont_confirm_staff/${staffId}`);
-                if (response.status !== 200) {
-                    throw new Error(response.data.error || 'Failed to cancel confirmation');
-                }
-                console.log('Confirmation cancelled successfully:', response.data.message);
-                getStaffsfromendpoint(); // Refresh the staff list
-            } catch (error) {
-                console.error('Confirmation cancellation error:', error.message);
-            }
-        };
-
+        
         return (
             <div className="relative p-6 mb-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex gap-6">
@@ -160,18 +147,12 @@ const Confirmation = () => {
                     </div>
                 ) : isAwaitingConfirmation ? (
                     <div className="absolute top-4 right-4 text-xs px-3 py-1 rounded-full">
-                        Awaiting Confirmation
+
                         <button
                             onClick={() => handleConfirmStaff(staff.staff_id)}
                             className="ml-2 px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"
                         >
                             Confirm
-                        </button>
-                        <button
-                            onClick={() => handleDontConfirmStaff(staff.staff_id)}
-                            className="ml-2 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                        >
-                            Don’t Confirm
                         </button>
                     </div>
                 ) : (
