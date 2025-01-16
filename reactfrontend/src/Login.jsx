@@ -67,9 +67,9 @@ const LoginForm = () => {
             <div className="absolute inset-0 bg-black opacity-50"></div>
 
             {/* Login Form */}
-            <div className="relative z-10 bg-white/90 backdrop-blur-md rounded-xl shadow-lg w-full max-w-md p-8">
+            <div className="relative z-10 bg-white/90 backdrop-blur-md rounded-xl shadow-lg w-full max-w-md p-6">
                 <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold text-gray-800">Federal Medical Centre Records</h2>
+                    <h2 className="text-3xl font-bold text-gray-800">Human Resources Software</h2>
                     <p className="text-gray-600">Select your role and sign in</p>
                 </div>
 

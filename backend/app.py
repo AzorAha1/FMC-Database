@@ -647,14 +647,10 @@ def list_staff():
 #     return render_template('confirmation.html', title='Confirmation', 
 #                            eligible_staff=eligible_staff, pending_staff=pending_staff, 
 #                            currenttime=currenttime)
-
-from datetime import datetime, timedelta
-# new confirmation endpoint
-@app.route('/api/confirmation', methods=['GET', 'POST'])
+@app.route('/api/confirmation', methods=['GET'])
 @login_required
 def confirmation():
-    """confirmation endpoint"""
-    print(session)
+    """Confirmation endpoint"""
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 10))
     skip = (page - 1) * limit
@@ -664,15 +660,16 @@ def confirmation():
         'midName': 1,
         'lastName': 1,
         'fileNumber': 1,
-        'department': 1,  # Added
+        'department': 1,
         'stafftype': 1,
         'staffsalgrade': 1,
-        'staffrank': 1,   # Added
-        'conhessLevel': 1,  # Added
+        'staffrank': 1,
+        'conhessLevel': 1,
         'staffdateoffirstapt': 1,
-        'staffdateofpresentapt': 1,  # Added
-        'profilePicture': 1,  # Added
-        'confirmation_status': 1
+        'staffdateofpresentapt': 1,
+        'profilePicture': 1,
+        'confirmation_status': 1,
+        'daysUntilConfirmation': 1
     }).skip(skip).limit(limit)
     total_staffs = mongo.db.permanent_staff.count_documents({})
     totalPages = (total_staffs // limit) + (1 if total_staffs % limit > 0 else 0)
@@ -687,44 +684,109 @@ def confirmation():
 
         profile_picture = staff.get('profilePicture')
         if profile_picture:
-            # Remove any path components and just use the filename
             profile_picture = profile_picture.split('/')[-1]
             profile_picture = f'/uploads/{profile_picture}'
 
-        
-        newstatus = 'confirmed' if isEligible else 'unconfirmed'
-        if staff.get('confirmation_status') != newstatus:
-            mongo.db.permanent_staff.update_one(
-                {'staff_id': staff['staff_id']},
-                {'$set': {'confirmation_status': newstatus}}
-            )
+        # Determine status
+        if isEligible:
+            if staff.get('confirmation_status') == 'confirmed':
+                status = 'confirmed'
+            else:
+                status = 'awaiting_confirmation'
+        else:
+            status = 'pending'
+
+        # Update the staff record in the database
+        mongo.db.permanent_staff.update_one(
+            {'staff_id': staff['staff_id']},
+            {'$set': {
+                'confirmation_status': status,
+                'daysUntilConfirmation': max(0, days_until_confirmation)
+            }}
+        )
 
         result.append({
-        'staff_id': staff['staff_id'],
-        'firstName': staff.get('firstName', ''),
-        'midName': staff.get('midName', ''),
-        'lastName': staff.get('lastName', ''),
-        'fileNumber': staff.get('fileNumber', ''),
-        'department': staff.get('department', ''),
-        'stafftype': staff.get('stafftype', ''),
-        'staffsalgrade': staff.get('staffsalgrade', ''),
-        'staffrank': staff.get('staffrank', ''),
-        'conhessLevel': staff.get('conhessLevel', ''),
-        'staffdateoffirstapt': staff['staffdateoffirstapt'],
-        'staffdateofpresentapt': staff.get('staffdateofpresentapt', ''),
-        'profilePicture': profile_picture,
-        'isEligible': isEligible,
-        'daysUntilConfirmation': max(0, days_until_confirmation),
-        'confirmation_status': newstatus
-    })
+            'staff_id': staff['staff_id'],
+            'firstName': staff.get('firstName', ''),
+            'midName': staff.get('midName', ''),
+            'lastName': staff.get('lastName', ''),
+            'fileNumber': staff.get('fileNumber', ''),
+            'department': staff.get('department', ''),
+            'stafftype': staff.get('stafftype', ''),
+            'staffsalgrade': staff.get('staffsalgrade', ''),
+            'staffrank': staff.get('staffrank', ''),
+            'conhessLevel': staff.get('conhessLevel', ''),
+            'staffdateoffirstapt': staff['staffdateoffirstapt'],
+            'staffdateofpresentapt': staff.get('staffdateofpresentapt', ''),
+            'profilePicture': profile_picture,
+            'isEligible': isEligible,
+            'daysUntilConfirmation': max(0, days_until_confirmation),
+            'confirmation_status': status
+        })
+
     return jsonify({
         'data': result,
         'totalPages': totalPages,
         'currentPage': page,
         'totalStaffs': total_staffs
     })
+from datetime import datetime, timedelta
+# new confirmation endpoint
+@app.route('/api/confirm_staff/<staff_id>', methods=['POST'])
+@login_required
+def confirm_staff(staff_id):
+    if not staff_id:
+        return jsonify({'error': 'Staff ID is required'}), 400
 
-# old promotion endpoint 
+    # Find the staff member in the database
+    staff = mongo.db.permanent_staff.find_one({'staff_id': staff_id})
+    if not staff:
+        return jsonify({'error': 'Staff not found'}), 404
+
+    # Validate the current status
+    if staff.get('confirmation_status') != 'awaiting_confirmation':
+        return jsonify({'error': 'Staff is not eligible for confirmation'}), 400
+
+    # Update the confirmation status
+    mongo.db.permanent_staff.update_one(
+        {'staff_id': staff_id},
+        {'$set': {'confirmation_status': 'confirmed'}}
+    )
+    return jsonify({'message': 'Staff confirmed successfully'}), 200
+
+@app.route('/api/dont_confirm_staff/<staff_id>', methods=['POST'])
+@login_required
+def dont_confirm_staff(staff_id):
+    if not staff_id:
+        return jsonify({'error': 'Staff ID is required'}), 400
+
+    # Fetch the staff member's current data
+    staff = mongo.db.permanent_staff.find_one({'staff_id': staff_id})
+    if not staff:
+        return jsonify({'error': 'Staff not found'}), 404
+
+    # Validate the current status
+    if staff.get('confirmation_status') != 'awaiting_confirmation':
+        return jsonify({'error': 'Staff is not eligible for cancellation'}), 400
+
+    # Get the current daysUntilConfirmation (default to 0 if not present)
+    current_days_until_confirmation = staff.get('daysUntilConfirmation', 0)
+
+    # Add 365 days to daysUntilConfirmation
+    new_days_until_confirmation = current_days_until_confirmation + 365
+
+    # Update the staff record in the database
+    mongo.db.permanent_staff.update_one(
+        {'staff_id': staff_id},
+        {
+            '$set': {
+                'confirmation_status': 'unconfirmed',  # Update status
+                'daysUntilConfirmation': new_days_until_confirmation  # Add 365 days
+            }
+        }
+    )
+
+    return jsonify({'message': 'Staff confirmation cancelled and 1 year added successfully'}), 200# old promotion endpoint 
 # @app.route('/Promotion', methods=['GET', 'POST'])
 # @login_required
 # def promotion():

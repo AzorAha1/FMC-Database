@@ -1,4 +1,3 @@
-// Updated Frontend Component (Confirmation.jsx)
 import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar.jsx";
 import axios from "./api/axios.js";
@@ -16,8 +15,8 @@ const Confirmation = () => {
     const getStaffsfromendpoint = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`/api/confirmation?page=${page}&limit=10`);
-            // Ensure profile picture URLs are absolute
+            const response = await axios.get(`http://localhost:5003/api/confirmation?page=${page}&limit=10`);
+            console.log("Backend response:", response.data); // Log the response
             const staffWithFullUrls = response.data.data.map(staff => ({
                 ...staff,
                 profilePicture: staff.profilePicture 
@@ -43,16 +42,18 @@ const Confirmation = () => {
         setPage(newPage);
     };
 
-    const pendingStaff = staffList.filter((staff) => !staff.isEligible);
-    const confirmedStaff = staffList.filter((staff) => staff.isEligible);
+    // Filter staff based on their confirmation status
+    const pendingStaff = staffList.filter((staff) => staff.confirmation_status === 'pending');
+    const awaitingConfirmationStaff = staffList.filter((staff) => staff.confirmation_status === 'awaiting_confirmation');
+    const confirmedStaff = staffList.filter((staff) => staff.confirmation_status === 'confirmed');
 
-    const StaffCard = ({ staff, isPending }) => {
+    const StaffCard = ({ staff, isPending, isAwaitingConfirmation, getStaffsfromendpoint }) => {
+        console.log("Staff data:", staff); // Log the staff data
         const [imageError, setImageError] = useState(false);
 
         const handleImageError = (e) => {
-            console.log("Image failed to load:", staff.profilePicture);
             setImageError(true);
-            e.target.onerror = null; // Prevent infinite error loop
+            e.target.onerror = null;
         };
 
         const ProfileImage = () => {
@@ -74,17 +75,42 @@ const Confirmation = () => {
             );
         };
 
+        // Handle Confirm Staff
+        const handleConfirmStaff = async (staffId) => {
+            try {
+                const response = await axios.post(`http://localhost:5003/api/confirm_staff/${staffId}`);
+                if (response.status !== 200) {
+                    throw new Error(response.data.error || 'Failed to confirm staff');
+                }
+                console.log('Confirmation successful:', response.data.message);
+                getStaffsfromendpoint(); // Refresh the staff list
+            } catch (error) {
+                console.error('Confirmation error:', error.message);
+            }
+        };
+
+        // Handle Don’t Confirm Staff
+        const handleDontConfirmStaff = async (staffId) => {
+            try {
+                const response = await axios.post(`http://localhost:5003/api/dont_confirm_staff/${staffId}`);
+                if (response.status !== 200) {
+                    throw new Error(response.data.error || 'Failed to cancel confirmation');
+                }
+                console.log('Confirmation cancelled successfully:', response.data.message);
+                getStaffsfromendpoint(); // Refresh the staff list
+            } catch (error) {
+                console.error('Confirmation cancellation error:', error.message);
+            }
+        };
+
         return (
             <div className="relative p-6 mb-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex gap-6">
-                    {/* Profile Picture Section */}
                     <div className="flex-shrink-0">
                         <div className="w-32 h-32 rounded-lg overflow-hidden bg-gray-100 border">
                             <ProfileImage />
                         </div>
                     </div>
-
-                    {/* Rest of the card content remains the same */}
                     <div className="flex-grow grid grid-cols-2 gap-4">
                         <div>
                             <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -126,11 +152,27 @@ const Confirmation = () => {
                         </div>
                     </div>
                 </div>
-                
+
                 {/* Status Indicators */}
                 {isPending ? (
                     <div className="absolute top-4 right-4 bg-red-500 text-white text-xs px-3 py-1 rounded-full">
                         {staff.daysUntilConfirmation} days left
+                    </div>
+                ) : isAwaitingConfirmation ? (
+                    <div className="absolute top-4 right-4 text-xs px-3 py-1 rounded-full">
+                        Awaiting Confirmation
+                        <button
+                            onClick={() => handleConfirmStaff(staff.staff_id)}
+                            className="ml-2 px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                        >
+                            Confirm
+                        </button>
+                        <button
+                            onClick={() => handleDontConfirmStaff(staff.staff_id)}
+                            className="ml-2 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                        >
+                            Don’t Confirm
+                        </button>
                     </div>
                 ) : (
                     <div className="absolute top-4 right-4 bg-green-500 text-white text-xs px-3 py-1 rounded-full">
@@ -178,6 +220,16 @@ const Confirmation = () => {
                         </button>
                         <button
                             className={`px-4 py-2 rounded-lg ${
+                                activeTab === "awaiting_confirmation"
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-gray-200 text-gray-700"
+                            }`}
+                            onClick={() => setActiveTab("awaiting_confirmation")}
+                        >
+                            Awaiting Confirmation ({awaitingConfirmationStaff.length})
+                        </button>
+                        <button
+                            className={`px-4 py-2 rounded-lg ${
                                 activeTab === "confirmed"
                                     ? "bg-blue-600 text-white"
                                     : "bg-gray-200 text-gray-700"
@@ -196,6 +248,18 @@ const Confirmation = () => {
                                       key={staff.staff_id}
                                       staff={staff}
                                       isPending={true}
+                                      isAwaitingConfirmation={false}
+                                      getStaffsfromendpoint={getStaffsfromendpoint} // Pass the function
+                                  />
+                              ))
+                            : activeTab === "awaiting_confirmation"
+                            ? awaitingConfirmationStaff.map((staff) => (
+                                  <StaffCard
+                                      key={staff.staff_id}
+                                      staff={staff}
+                                      isPending={false}
+                                      isAwaitingConfirmation={true}
+                                      getStaffsfromendpoint={getStaffsfromendpoint} // Pass the function
                                   />
                               ))
                             : confirmedStaff.map((staff) => (
@@ -203,6 +267,8 @@ const Confirmation = () => {
                                       key={staff.staff_id}
                                       staff={staff}
                                       isPending={false}
+                                      isAwaitingConfirmation={false}
+                                      getStaffsfromendpoint={getStaffsfromendpoint} // Pass the function
                                   />
                               ))}
                     </div>
