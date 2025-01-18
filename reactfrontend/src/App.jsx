@@ -12,6 +12,7 @@ import AddLcmStaff from './AddLcmStaff.jsx';
 import LcmStaffTable from './ListLcmStaff.jsx';
 import AddUser from './AddUser.jsx';
 import UserList from './UserList.jsx';
+import ExitManagement from './ExitManagement.jsx';
 
 function App() {
   return (
@@ -96,6 +97,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <UserList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/api/exit_management'
+            element={
+              <ProtectedRoute>
+                <ExitManagement />
               </ProtectedRoute>
             }
           />

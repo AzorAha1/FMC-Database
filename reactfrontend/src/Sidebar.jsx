@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from './api/axios.js';
 import { useAuth } from './AuthContext.jsx';
+import { faCalendarTimes } from '@fortawesome/free-solid-svg-icons';
+import { faUserSlash } from '@fortawesome/free-solid-svg-icons';
 
 import {
     faChartLine,
@@ -183,6 +185,8 @@ const Sidebar = () => {
                         )}
                     </>
                 )}
+                {/* Exit Management */}
+                {collapsedItemInMenu('Exit Management', faCalendarTimes, '/api/exit_management')}
                 
                 {/* Logout */}
                 {collapsedItemInMenu('Logout', faSignOutAlt, '/api/logout')}
