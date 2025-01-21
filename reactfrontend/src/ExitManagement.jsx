@@ -82,7 +82,7 @@ const ExitManagement = () => {
             {/* Main Content */}
             <div className="flex-1 p-6 bg-gray-50">
                 <h1 className="text-2xl font-bold mb-6">Exit Management</h1>
-    
+                <h2 className='font-bold mb-5'>Active Permanent Staffs</h2>
                 {error && <Alert message={error} type="error" showIcon className="mb-6" />}
     
                 <Table dataSource={activeStaff} loading={loading} rowKey="staffNumber">
@@ -116,6 +116,7 @@ const ExitManagement = () => {
                             <Select placeholder="Select exit reason">
                                 <Option value="death">Death</Option>
                                 <Option value="dismissal">Dismissal</Option>
+                                <Option value="voluntarily">Voluntarily</Option>
                             </Select>
                         </Form.Item>
                         <Form.Item>

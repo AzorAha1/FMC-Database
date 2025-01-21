@@ -13,6 +13,7 @@ import LcmStaffTable from './ListLcmStaff.jsx';
 import AddUser from './AddUser.jsx';
 import UserList from './UserList.jsx';
 import ExitManagement from './ExitManagement.jsx';
+import InActiveStaff from './InActive.jsx';
 
 function App() {
   return (
@@ -105,6 +106,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ExitManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/api/inactive_staff'
+            element={
+              <ProtectedRoute>
+                <InActiveStaff />
               </ProtectedRoute>
             }
           />

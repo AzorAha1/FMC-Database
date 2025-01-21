@@ -1149,11 +1149,13 @@ def inactive_staff():
                 'staff_id': staff['staff_id'],
                 'firstName': staff['firstName'],
                 'lastName': staff['lastName'],
+                'department': staff['department'],
                 'exit_date': staff['exit_date'],
                 'exit_reason': staff['exit_reason'],
-                'staffNumber': f"${staff['stafftype']}-${staff['fileNumber']}"
+                'staffNumber': f"{staff['stafftype']}-{staff['fileNumber']}"
             })
-        return jsonify({'inactive': result,  'sucesss': True}), 200
+        print(result)
+        return jsonify({'inactive': result,  'success': True}), 200
     except Exception as e:
         return jsonify({'error': str(e), 'success': False}), 500
 

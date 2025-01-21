@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from './api/axios.js';
 import { useAuth } from './AuthContext.jsx';
-import { faCalendarTimes } from '@fortawesome/free-solid-svg-icons';
+import { faCalendarTimes, faUser } from '@fortawesome/free-solid-svg-icons';
 import { faUserSlash } from '@fortawesome/free-solid-svg-icons';
 
 import {
@@ -28,6 +28,7 @@ const Sidebar = () => {
         managePermanent: false,
         manageLocum: false,
         manageUsers: false,
+        exit_management: false,
     });
     const { logout } = useAuth();
     const navigate = useNavigate();
@@ -186,7 +187,33 @@ const Sidebar = () => {
                     </>
                 )}
                 {/* Exit Management */}
-                {collapsedItemInMenu('Exit Management', faCalendarTimes, '/api/exit_management')}
+                {/* {collapsedItemInMenu('Exit Management', faCalendarTimes, '/api/exit_management')} */}
+
+                <li
+                    className='flex items-center justify-between p-2 hover:bg-gray-700 rounded cursor-pointer'
+                    onClick={() => toggleSubMenu('exit_management')}
+                    aria-expanded={openMenu.exit_management}
+                >
+                    <div className='flex items-center space-x-4'>
+                        <FontAwesomeIcon icon={faCalendarTimes} className='text-lg' />
+                        {!isCollapsed && <span>Exit Management</span>}
+                        
+                    </div>
+                    {!isCollapsed && (
+                        <FontAwesomeIcon
+                            icon={faChevronDown}
+                            className={`text-sm transform transition-transform ${
+                                openMenu.exit_management ? 'rotate-180' : ''
+                            }`}
+                        />
+                    )}
+                </li>
+                {openMenu.exit_management && !isCollapsed && (
+                    <ul className='pl-8 space-y-2'>
+                        {collapsedItemInMenu('Active Staffs', faCalendarTimes, '/api/exit_management')}
+                        {collapsedItemInMenu('Inactive Staffs', faUserSlash, '/api/inactive_staff')}
+                    </ul>
+                )}
                 
                 {/* Logout */}
                 {collapsedItemInMenu('Logout', faSignOutAlt, '/api/logout')}
