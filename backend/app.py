@@ -49,6 +49,17 @@ def serve_file(filename):
         return 'File not found', 404
 
 
+#calculate exit by retirement at 60 and by 35 years of service from dateoffirstapt
+def calculate_retirement_date(staff_data):
+    """Calculate retirement date based on date of first apt or years of service"""
+    try:
+        date_of_first_apt = datetime.strptime(staff_data['staffdateoffirstapt'], "%Y-%m-%d")
+        retirement_service = date_of_first_apt + timedelta(days=35*365)
+        retirement_age = date_of_first_apt + timedelta(days=60*365)
+        return min(retirement_service, retirement_age)
+    except (ValueError, KeyError):
+        return None
+
 def calculate_promotion_start_date(present_apt):
     """Calculate the promotion start date based on appointment date"""
     present_apt_date = present_apt.date() if isinstance(present_apt, datetime) else present_apt
@@ -321,7 +332,15 @@ def add_staff():
                     'success': False,
                     'message': f'Missing required field: {field}'
                 }), 400
-
+        # calculate the retirement date
+        retirement_date = calculate_retirement_date({
+            'staffdateoffirstapt': staff_date_of_first_appointment.strftime('%Y-%m-%d'),
+            'dob': staff_dob.strftime('%Y-%m-%d')
+        })
+        if retirement_date is not None:
+            is_active = current_time < retirement_date
+        else:
+            is_active = True
         # Prepare staff document
         staff = {
             'staff_id': str(uuid.uuid4()),
@@ -343,6 +362,7 @@ def add_staff():
             'localgovorigin': data['localgovorigin'],
             'qualification': data['qualification'],
             'conhessLevel': data['conhessLevel'],
+            'is_active': is_active,
             'confirmation_status': confirmation_status,
             'created_at': current_time,
             'updated_at': current_time
@@ -367,7 +387,9 @@ def add_staff():
                 'success': False,
                 'message': 'Invalid IPPISS number format. Must contain only digits.'
             }), 400
-
+        
+        
+        
         try:
             # Insert into database
             permanent_staff = mongo.db.permanent_staff.insert_one(staff)
@@ -1041,6 +1063,81 @@ def list_lcm_staff():
 
 #     return render_template('add_user.html', title='Add User')
 
+#exit management 
+@app.route('/api/exit_management', methods=['GET', 'POST'])
+@login_required
+def exit_management():
+    if request.method == 'GET':
+        try:
+            # Fetch inactive staff
+            inactive_staffs = mongo.db.permanent_staff.find({'is_active': False})
+            result = []
+            for staff in inactive_staffs:
+                result.append({
+                    'employee_id': staff['staff_id'],
+                    'employee_name': f"{staff['firstName']} {staff['midName']} {staff['lastName']}".strip(),
+                    'employee_ippiss_number': staff['staffippissNumber'],
+                    'employee_file_number': staff['fileNumber'],
+                    'employee_department': staff['department'],
+                    'employee_date_of_exit': staff.get('exit_date', ''),
+                    'employee_exit_reason': staff.get('exit_reason', '')
+                })
+            return jsonify({'exit': result, 'success': True}), 200
+        except Exception as e:
+            return jsonify({'error': str(e), 'success': False}), 500
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            staff_id = data.get('staff_id')
+            exit_reason = data.get('exit_reason')
+            exit_date = data.get('exit_date')
+            if not all([staff_id, exit_reason, exit_date]):
+                return jsonify({'error': 'All fields are required', 'success': False}), 400
+
+            # Validate exit reason
+            if exit_reason not in ['death', 'dismissal']:
+                return jsonify({'error': 'Invalid exit reason', 'success': False}), 400
+
+            # Update the staff member's record
+            mongo.db.permanent_staff.update_one(
+                {'staff_id': staff_id},
+                {
+                    '$set': {
+                        'is_active': False,
+                        'exit_reason': exit_reason,
+                        'exit_date': exit_date
+                    }
+                }
+            )
+            return jsonify({
+                'message': 'Staff marked as inactive successfully',
+                'success': True
+            }), 200
+        except Exception as e:
+            print(f"An error occurred: {str(e)}")
+            return jsonify({'error': str(e), 'success': False}), 500
+        
+@app.route('/api/active_staff', methods=['GET'])
+@login_required
+def active_staff():
+    try:
+        # Fetch active staff
+        active_staffs = mongo.db.permanent_staff.find({'is_active': True})
+        result = []
+        for staff in active_staffs:
+            result.append({
+                'staff_id': staff['staff_id'],
+                'firstName': staff['firstName'],
+                'lastName': staff['lastName'],
+                'department': staff['department']
+            })
+        return jsonify({'active': result, 'success': True}), 200
+    except Exception as e:
+        return jsonify({'error': str(e), 'success': False}), 500
+
+
+
+    
 # new add user endpoint 
 @app.route('/api/add_user', methods=['POST'])
 @login_required
