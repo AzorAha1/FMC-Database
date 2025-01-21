@@ -1127,11 +1127,33 @@ def active_staff():
         for staff in active_staffs:
             result.append({
                 'staff_id': staff['staff_id'],
+                'staffNumber': f"{staff['stafftype']}-{staff['fileNumber']}",
                 'firstName': staff['firstName'],
                 'lastName': staff['lastName'],
                 'department': staff['department']
             })
+            print(result)
         return jsonify({'active': result, 'success': True}), 200
+    except Exception as e:
+        return jsonify({'error': str(e), 'success': False}), 500
+    
+# fetch inactivestaffs 
+@app.route('/api/inactive_staff', methods=['GET'])
+@login_required
+def inactive_staff():
+    try:
+        inactive_staff = mongo.db.permanent_staff.find({'is_active': False})
+        result = []
+        for staff in inactive_staff:
+            result.append({
+                'staff_id': staff['staff_id'],
+                'firstName': staff['firstName'],
+                'lastName': staff['lastName'],
+                'exit_date': staff['exit_date'],
+                'exit_reason': staff['exit_reason'],
+                'staffNumber': f"${staff['stafftype']}-${staff['fileNumber']}"
+            })
+        return jsonify({'inactive': result,  'sucesss': True}), 200
     except Exception as e:
         return jsonify({'error': str(e), 'success': False}), 500
 

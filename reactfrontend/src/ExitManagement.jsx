@@ -69,6 +69,10 @@ const ExitManagement = () => {
             console.error(err);
         }
     };
+    {/* handle list of seeing inactive users */}
+    const fetchInActiveStaff = async () => {
+        pass
+    }
 
     return (
         <div className="flex min-h-screen">
@@ -81,8 +85,8 @@ const ExitManagement = () => {
     
                 {error && <Alert message={error} type="error" showIcon className="mb-6" />}
     
-                <Table dataSource={activeStaff} loading={loading} rowKey="staff_id">
-                    <Column title="Staff ID" dataIndex="staff_id" key="staff_id" />
+                <Table dataSource={activeStaff} loading={loading} rowKey="staffNumber">
+                    <Column title="Staff Number" dataIndex="staffNumber" key="staffNumber" />
                     <Column title="Name" render={(_, record) => `${record.firstName} ${record.lastName}`} key="name" />
                     <Column title="Department" dataIndex="department" key="department" />
                     <Column
