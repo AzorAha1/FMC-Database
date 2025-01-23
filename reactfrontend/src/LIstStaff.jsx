@@ -110,6 +110,27 @@ const StaffTable = () => {
     }
   };
 
+  {/* this will take care of exports */}
+  const handleExport = () => {
+    const headers = ['Name', 'Staff Number', 'IPPIS', 'Department', 'Rank', 'Grade'].join(',');
+    const rows = filteredStaff.map((staff) => [
+      `${staff.firstName} ${staff.midName} ${staff.lastName}`,
+      `${staff.stafftype}-${staff.fileNumber}`,
+      staff.staffippissNumber,
+      staff.department,
+      staff.rank,
+      staff.salaryGrade
+    ])
+    const csvData = [headers, ...rows].join('\n');
+    const blob = new Blob([csvData], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `List-of-Permanentstaffs-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
   };
@@ -151,6 +172,14 @@ const StaffTable = () => {
                   />
                   <Search className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
                 </div>
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={handleExport}
+                    className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Export
+                  </button>
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full">
@@ -160,6 +189,7 @@ const StaffTable = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Surname</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Other Name(s)</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IPPIS Number</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sal Grade</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DOB</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DOFA</th>
@@ -189,6 +219,9 @@ const StaffTable = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {staff.staffrank}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {staff.staffippissNumber}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {staff.staffsalgrade}

@@ -137,7 +137,7 @@ const Reports = () => {
               <p className="text-gray-600 mt-1">View and manage staff activity reports</p>
             </div>
             <button
-              onClick={() => navigate('/api/dashboard')}
+               
               className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <ChevronLeft className="w-4 h-4 mr-2" />

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "./api/axios.js";
 import Sidebar from "./Sidebar.jsx";
 import EditLcmStaff from "./EditLcmStaff.jsx";
+import { Button } from 'antd';
 import { Search } from 'lucide-react';
 
 const LcmStaffTable = () => {
@@ -30,6 +31,38 @@ const LcmStaffTable = () => {
   const handleEdit = (staff) => {
     setEditingStaff(staff);
     setIsEditWindowOpen(true);
+  };
+
+  const handleExport = () => {
+    // Create the CSV headers
+    const headers = ['Full Name', 'Staff Number', 'Staff Rank', 'Department', 'Salary Grade'].join(',');
+  
+    // Create the CSV rows
+    const rows = filteredStaff.map((staff) => [
+      `${staff.firstName} ${staff.midName} ${staff.lastName}`,
+      `${staff.staffType}-${staff.fileNumber}`,
+      staff.rank,
+      staff.department,
+      staff.salaryGrade
+    ].join(','));
+  
+    // Combine headers and rows into a single CSV string
+    const csvData = [headers, ...rows].join('\n');
+  
+    // Create a Blob with the CSV data
+    const blob = new Blob([csvData], { type: 'text/csv' });
+  
+    // Create a URL for the Blob
+    const url = window.URL.createObjectURL(blob);
+  
+    // Create a link element to trigger the download
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `List-of-lcm-staffs-${new Date().toISOString().split('T')[0]}.csv`; // Format the date as YYYY-MM-DD
+    a.click();
+  
+    // Revoke the URL to free up memory
+    window.URL.revokeObjectURL(url);
   };
 
   const handleSaveEdit = async (updatedData) => {
@@ -112,6 +145,14 @@ const LcmStaffTable = () => {
                     className="pl-10 pr-4 py-2 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <Search className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={handleExport}
+                    className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Export
+                  </button>
                 </div>
               </div>
               {/* Table */}
