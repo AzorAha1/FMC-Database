@@ -1095,7 +1095,7 @@ def exit_management():
                 return jsonify({'error': 'All fields are required', 'success': False}), 400
 
             # Validate exit reason
-            if exit_reason not in ['death', 'dismissal']:
+            if exit_reason not in ['death', 'dismissal', 'voluntarily']:
                 return jsonify({'error': 'Invalid exit reason', 'success': False}), 400
 
             # Update the staff member's record
