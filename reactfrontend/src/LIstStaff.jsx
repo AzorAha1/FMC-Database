@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "./api/axios.js";
 import Sidebar from "./Sidebar.jsx";
 import EditStaff from "./EditStaff.jsx";
+import { DownloadOutlined } from '@ant-design/icons';
 import { useAuth } from "./AuthContext.jsx";
 import { Search } from 'lucide-react';
 
@@ -160,26 +161,29 @@ const StaffTable = () => {
                 <h2 className="text-2xl font-bold text-gray-800">Permanent & Pensionable Staff Records</h2>
                 <p className="text-gray-600 mt-1">Total Staff: {staffData.length}</p>
               </div>
-              <div className="p-4 border-b border-gray-200">
-                <div className="relative">
+              {/* Search Bar */}
+              <div className="flex gap-4 mb-6 p-4 border-b border-gray-200">
+                {/* Search Input with Icon */}
+                <div className="flex-grow flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-200">
+                  <Search className="h-5 w-5 text-gray-400 ml-3" /> {/* Icon */}
                   <input
                     type="text"
                     placeholder="Search staff by name..."
                     value={searchTerm}
                     onChange={handleSearchTerm}
-                    className="pl-10 pr-4 py-2 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="pl-2 pr-4 py-2 w-full focus:outline-none bg-transparent"
                     aria-label="Search staff by name"
                   />
-                  <Search className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
                 </div>
-                <div className="mt-4 flex justify-end">
-                  <button
-                    onClick={handleExport}
-                    className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                  >
-                    Export
-                  </button>
-                </div>
+
+                {/* Export Button */}
+                <button
+                  onClick={handleExport}
+                  className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  <DownloadOutlined className="mr-2" />
+                  Export
+                </button>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full">
