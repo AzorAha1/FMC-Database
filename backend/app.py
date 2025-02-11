@@ -309,7 +309,7 @@ def add_staff():
         # Calculate confirmation status
         two_years = timedelta(days=730)
         current_time = datetime.utcnow()
-        confirmation_status = 'confirmed' if current_time - staff_date_of_first_appointment > two_years else 'unconfirmed'
+        confirmation_status = 'awaiting_confirmation' if current_time - staff_date_of_first_appointment > two_years else 'unconfirmed'
 
         # Validate required fields
         required_fields = [
@@ -345,6 +345,23 @@ def add_staff():
         else:
             is_active = True
         # Prepare staff document
+        # validate if data already exists
+        
+        staff_number = data.get('fileNumber')
+        staff_ippisnumber = data.get('staffippissNumber')
+
+        existing_staffnumber = mongo.db.permanent_staff.find({'fileNumber': staff_number})
+        if existing_staffnumber:
+            return jsonify({
+                'success': False,
+                'message': 'Staff with this File Number already Exists'
+            }), 400
+        existing_staffippisnumber = mongo.db.permanent_staff.find({'staffippissNumber': staff_ippisnumber})
+        if existing_staffippisnumber:
+            return jsonify({
+                'success': False,
+                'message': 'Staff with this IPPIS Number already exists'
+            }), 400
         staff = {
             'staff_id': str(uuid.uuid4()),
             'firstName': data['stafffirstName'],
