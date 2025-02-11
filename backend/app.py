@@ -85,6 +85,9 @@ def get_conhess_level(conhess_str):
 def calculate_promotion(staff_data):
     """Calculate promotion eligibility date based on staff type and level"""
     try:
+        # check if staff is confirmed
+        if staff_data.get('confirmation_status') != 'confirmed':
+            return None
         present_apt = datetime.strptime(staff_data['staffdateofpresentapt'], '%Y-%m-%d')
         staff_type = staff_data['stafftype']
         conhess_level = get_conhess_level(staff_data['conhessLevel'])
