@@ -41,6 +41,14 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 mongo = PyMongo(app)
 
+# create indexing for faster fetching of data from the database
+with app.app_context():
+    mongo.db.permanent_staff.create_index(['staff_id', 1], unique=True)
+    mongo.db.permanent_staff.create_index([('fileNumber', 1)], unique=True)
+    mongo.db.permanent_staff.create_index([('staffippissNumber', 1)], unique=True)
+    mongo.db.permanent_staff.create_index([('staffdateoffirstapt', 1)], unique=True)
+    mongo.db.permanent_staff.create_index([('confirmation_status', 1)], unique=True)
+    mongo.db.user.create_index([('email'), 1], unique=True)
 @app.route('/uploads/<filename>')
 def serve_file(filename):
     try:
