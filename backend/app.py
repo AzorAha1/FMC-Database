@@ -26,6 +26,11 @@ CORS(app,
     supports_credentials=True
 )
 
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_SAMESITE='Lax'
+)
+
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
@@ -43,12 +48,13 @@ mongo = PyMongo(app)
 
 # create indexing for faster fetching of data from the database
 with app.app_context():
-    mongo.db.permanent_staff.create_index(['staff_id', 1], unique=True)
+    mongo.db.permanent_staff.create_index([('staff_id', 1)], unique=True)
     mongo.db.permanent_staff.create_index([('fileNumber', 1)], unique=True)
     mongo.db.permanent_staff.create_index([('staffippissNumber', 1)], unique=True)
-    mongo.db.permanent_staff.create_index([('staffdateoffirstapt', 1)], unique=True)
-    mongo.db.permanent_staff.create_index([('confirmation_status', 1)], unique=True)
-    mongo.db.user.create_index([('email'), 1], unique=True)
+    mongo.db.permanent_staff.create_index([('staffdateoffirstapt', 1)])
+    mongo.db.permanent_staff.create_index([('confirmation_status', 1)])
+    mongo.db.user.create_index([('email', 1)], unique=True)
+
 @app.route('/uploads/<filename>')
 def serve_file(filename):
     try:
@@ -358,14 +364,14 @@ def add_staff():
         staff_number = data.get('fileNumber')
         staff_ippisnumber = data.get('staffippissNumber')
 
-        existing_staffnumber = mongo.db.permanent_staff.find({'fileNumber': staff_number})
-        if existing_staffnumber:
+        existing_staffnumber = mongo.db.permanent_staff.find_one({'fileNumber': staff_number})
+        if existing_staffnumber is not None:
             return jsonify({
                 'success': False,
                 'message': 'Staff with this File Number already Exists'
             }), 400
-        existing_staffippisnumber = mongo.db.permanent_staff.find({'staffippissNumber': staff_ippisnumber})
-        if existing_staffippisnumber:
+        existing_staffippisnumber = mongo.db.permanent_staff.find_one({'staffippissNumber': staff_ippisnumber})
+        if existing_staffippisnumber is not None:
             return jsonify({
                 'success': False,
                 'message': 'Staff with this IPPIS Number already exists'
