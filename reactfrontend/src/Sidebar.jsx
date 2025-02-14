@@ -77,7 +77,7 @@ const Sidebar = () => {
     return (
         <aside
             style={{ backgroundColor: '#1e1e2d' }}
-            className={`h-screen text-white transition-all duration-300 ${
+            className={`h-screen text-white transition-all overflow-y-auto duration-300 ${
                 isCollapsed ? 'w-20' : 'w-72'
             }`}
         >
