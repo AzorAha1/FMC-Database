@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "./api/axios.js";
 import Sidebar from "./Sidebar.jsx";
+import { Table, Button, Select, Modal, Form, Alert } from 'antd';
 import EditStaff from "./EditStaff.jsx";
 import { DownloadOutlined } from '@ant-design/icons';
 import { useAuth } from "./AuthContext.jsx";
@@ -14,8 +15,11 @@ const StaffTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
+  const [statusValue, setstatusValue] = useState("all")
   const { userRole } = useAuth();
 
+  const { Column } = Table
+  const { Option } = Select
   useEffect(() => {
     const fetchStaffData = async () => {
       try {
@@ -54,7 +58,12 @@ const StaffTable = () => {
     const matchesFullName = fullName.includes(searchTermLower);
   
     // Return true if either condition is met
-    return matchesSingleWord || matchesFullName;
+    const completematch = matchesSingleWord || matchesFullName;
+
+    // filtering with all, active or inactive
+    const matchesStatus = statusValue === 'all' || (statusValue === 'active' && staff.is_active) || (statusValue === 'inactive' && !staff.is_active)
+    
+    return completematch && matchesStatus
   });
   const handleSaveEdit = async (updatedData) => {
     try {
@@ -184,6 +193,18 @@ const StaffTable = () => {
                   <DownloadOutlined className="mr-2" />
                   Export
                 </button>
+                <Select
+                  defaultValue="all"
+                  onChange={(value) => setstatusValue(value)}
+                  className="w-40"
+                >
+                  <Option value="all">
+                    All Staffs
+                  </Option>
+                  <Option value="active">
+                    Active Staffs
+                  </Option>
+                </Select>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full">
@@ -202,9 +223,11 @@ const StaffTable = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LGA</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qualification</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Origin</th>
-                      {userRole === 'admin' && (
+                      {userRole === 'admin-user' && (
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                       )}
+                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -251,7 +274,7 @@ const StaffTable = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {staff.stafforigin}
                         </td>
-                        {userRole === 'admin' && (
+                        {userRole === 'admin-user' && (
                           <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
                             <button
                               onClick={() => handleEdit(staff)}
@@ -267,6 +290,17 @@ const StaffTable = () => {
                             </button>
                           </td>
                         )}
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span 
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              staff.is_active 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {staff.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
