@@ -183,7 +183,7 @@ const AddUser = () => {
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     >
                                         <option value="user">User</option>
-                                        <option value="admin">Admin</option>
+                                        <option value="admin-user">Admin</option>
                                     </select>
                                 </div>
 

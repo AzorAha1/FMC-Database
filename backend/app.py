@@ -963,7 +963,71 @@ def eligible_promotions():
             'error': str(e)
         }), 500
 
-    
+# promote staff 
+@app.route('/api/promote-staff', methods=['POST'])
+@login_required
+def promote_staff():
+    try:
+        staff_id = request.json.get('staffId')
+        if not staff_id:
+            return jsonify({'success': False, 'error': 'Staff ID is required'}), 400
+            
+        # Find the staff member and ensure they are active
+        staff = mongo.db.permanent_staff.find_one({
+            '_id': ObjectId(staff_id),
+            'is_active': True
+        })
+        
+        if not staff:
+            return jsonify({'success': False, 'error': 'Staff not found or not active'}), 404
+            
+        # Parse current CONHESS level
+        current_conhess = staff['conhessLevel']
+        if not current_conhess.startswith('CONHESS '):
+            return jsonify({'success': False, 'error': 'Invalid CONHESS format'}), 400
+            
+        try:
+            current_level = int(current_conhess.split(' ')[1])
+            current_step = int(staff['staffstep'])
+            
+            # Calculate next level (promotion)
+            if (current_level == 9):
+                next_level = 11
+            else:
+                next_level = current_level + 1
+            # Calculate new step (two steps lower than current)
+            new_step = max(1, current_step - 2)  # Ensure it doesn't go below 1
+            
+            new_conhess = f"CONHESS {next_level}"
+            current_year = date.today().year
+            new_date_of_present_apt = f"{current_year}-01-01"
+            # Update the staff record
+            result = mongo.db.permanent_staff.update_one(
+                {'_id': ObjectId(staff_id), 'is_active': True},
+                {'$set': {
+                    'conhessLevel': new_conhess,
+                    'staffsalgrade': f'{new_conhess}/{new_step}',
+                    'staffstep': str(new_step),
+                    'staffdateofpresentapt': new_date_of_present_apt
+                }}
+            )
+            
+            if result.modified_count:
+                return jsonify({
+                    'success': True, 
+                    'message': f'Staff promoted to {new_conhess}/{new_step}',
+                    'newLevel': new_conhess,
+                    'newStep': new_step
+                })
+            else:
+                return jsonify({'success': False, 'error': 'Failed to update staff record or staff is not active'}), 500
+                
+        except ValueError:
+            return jsonify({'success': False, 'error': 'Could not parse CONHESS level or step'}), 400
+            
+    except Exception as e:
+        print("Error occurred during promotion:", str(e))
+        return jsonify({'success': False, 'error': str(e)}), 500
 # old lcm staff endpoint
 # @app.route('/addlcmstaff', methods=['GET', 'POST'])
 # @login_required

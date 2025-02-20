@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from './api/axios';
 import Sidebar from './Sidebar.jsx';
+import { useAuth } from './AuthContext.jsx';
 
 const Promotion = () => {
     const [promotionData, setPromotionData] = useState([]);
@@ -11,6 +12,7 @@ const Promotion = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalstaffs, setTotalstaffs] = useState(0);
+    const {userRole} = useAuth()
 
     useEffect(() => {
         const fetchData = async () => {
@@ -264,6 +266,38 @@ const Promotion = () => {
                                                     Check Details
                                                 </button>
                                             </td>
+                                            
+                                            {isEligible && userRole === 'admin-user' && staff.is_active && (
+                                                <td className='"px-6 py-4 whitespace-nowrap"'>
+                                                    <button
+                                                        onClick={ async () => {
+                                                            try {
+                                                                if (!staff.is_active) {
+                                                                    alert("Cannot promote an inactive staff member.");
+                                                                    return;
+                                                                }
+                                                                const response = await axios.post('/api/promote-staff', {
+                                                                    staffId: staff._id
+                                                                });
+                                                                if (response.data.success) {
+                                                                    alert(`Promotion successful! ${staff.firstName} ${staff.lastName} has been promoted to ${response.data.newLevel}/${response.data.newStep}`);
+                                                                    // Refresh the data
+                                                                    window.location.reload();
+                                                                } else {
+                                                                    alert(`Promotion failed: ${response.data.error}`);
+                                                                }
+                                                            } catch (error) {
+                                                                console.error('Error promoting staff:', error);
+                                                                alert(`An error occurred during promotion: ${error.message}`);
+                                                            }
+                                                        }}
+                                                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                                    >
+                                                        Promote 
+
+                                                    </button>
+                                                </td>
+                                            )}
                                         </tr>
                                     );
                                 })}
