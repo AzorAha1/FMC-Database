@@ -13,22 +13,38 @@ from flask_pymongo import DESCENDING, PyMongo
 import uuid
 from flask import make_response
 
-
-
 app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/statics')
 app.secret_key = 'secretkeyforfmcdatabase'
 app.config['MONGO_URI'] = 'mongodb://localhost:27017/fmc-database'
 app.permanent_session_lifetime = timedelta(hours=1)
 app.config['CORS_HEADERS'] = 'Content-Type'
-CORS(app, 
-    origins="http://localhost:5173",
-    allow_credentials=True,
-    supports_credentials=True
-)
 
+# CORS configuration
+CORS(app, 
+     supports_credentials=True,
+     resources={
+         r"/api/*": {
+             "origins": [
+                 "http://hrmanagement.local:5173",
+                 "http://hrmanagement.local:5003",
+                 "http://localhost:5003",
+                 "http://100.0.1.60:5173",
+                 "http://100.0.1.60:5003", 
+                 "http://localhost:5173",
+                 "http://192.168.1.105:5173",
+                 "http://192.168.1.105:5003",
+             ],
+             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+             "allow_headers": ["Content-Type", "Authorization"],
+             "expose_headers": ["Content-Type", "Authorization"]
+         }
+     }
+)
 app.config.update(
-    SESSION_COOKIE_SECURE=True,
-    SESSION_COOKIE_SAMESITE='Lax'
+    SESSION_COOKIE_DOMAIN=None,  # Allow cookies to work across subdomains
+    SESSION_COOKIE_SECURE=False,
+    SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_COOKIE_PATH='/'
 )
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
@@ -83,6 +99,10 @@ def calculate_promotion_start_date(present_apt):
     if present_apt_date > january_first:
         return date(year_of_appointment + 1, 1, 1)
     return present_apt_date
+
+def yearlyStepincrease(staff):
+    """this function will have a yearly step increase for every permanent staff"""
+    pass
 
 def calculate_promotion_eligibility(present_apt, years_required):
     """Calculate promotion eligibility based on start date and required years"""
@@ -190,7 +210,6 @@ def login():
             session['email'] = email
             session['role'] = user['role']
 
-            # Set session permanence based on "Remember Me"
             if remember_me:
                 session.permanent = True
                 app.permanent_session_lifetime = timedelta(days=30)  # 30 days
@@ -206,8 +225,8 @@ def login():
                     'isAdmin': user.get('role') == 'admin-user'
                 }
             })
-            response.headers.add('Access-Control-Allow-Origin', 'http://localhost:5173')
-            response.headers.add('Access-Control-Allow-Credentials', 'true')
+        
+            
             return response
 
         return jsonify({
@@ -219,6 +238,7 @@ def login():
         'success': False, 
         'message': 'Invalid email or password'
     }), 401
+
 @app.route('/api/check-auth', methods=['GET'])
 def check_auth():
     if 'email' in session:
@@ -340,6 +360,7 @@ def add_staff():
             'stafforigin',
             'localgovorigin',
             'qualification',
+            'staffstep',
             'conhessLevel'
         ]
 
@@ -396,6 +417,7 @@ def add_staff():
             'localgovorigin': data['localgovorigin'],
             'qualification': data['qualification'],
             'conhessLevel': data['conhessLevel'],
+            'staffstep':data['staffstep'],
             'is_active': is_active,
             'confirmation_status': confirmation_status,
             'created_at': current_time,
@@ -874,6 +896,7 @@ def eligible_promotions():
             'success': False,
             'error': str(e)
         }), 500
+
     
 # old lcm staff endpoint
 # @app.route('/addlcmstaff', methods=['GET', 'POST'])

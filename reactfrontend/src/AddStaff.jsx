@@ -8,11 +8,11 @@ const AddStaff = () => {
     const [selectedLevel, setSelectedLevel] = useState('');
     const [selectedStep, setSelectedStep] = useState('');
     const staffLevels = {
-        JSA: Array.from({ length: 6 }, (_, i) => i + 1), // CONHESS 1-6
+        JSA: Array.from({ length: 6 }, (_, i) => i + 2), // CONHESS 1-6
         SSA: Array.from({ length: 9 }, (_, i) => i + 7)  // CONHESS 7-15
     };
 
-    const steps = Array.from({ length: 10 }, (_, i) => i + 1); // Steps 1-10
+    const steps = Array.from({ length: 15 }, (_, i) => i + 1); // Steps 1-15
     const [staff, setStaff] = useState({
         firstName: '',
         middleName: '',
@@ -32,6 +32,7 @@ const AddStaff = () => {
         salaryGrade: '',
         gender: '',
         conhessLevel: '',
+        staffstep: '',
         profilePicture: null
     });
 
@@ -109,9 +110,8 @@ const AddStaff = () => {
                 return !value.trim() ? 'Qualification is required' : '';
             case 'staffLevel':
                 return !value ? 'Staff Level is required' : '';
-            case 'staffStep':
+            case 'staffstep':
                 return !value ? 'Staff Step is required' : '';
-            
             default:
                 return '';
         }
@@ -243,6 +243,7 @@ const AddStaff = () => {
                 qualification: 'qualification',
                 localGovernment: 'localgovorigin',
                 salaryGrade: 'staffsalgrade',
+                staffstep: 'staffstep',
                 gender: 'staffgender',
                 conhessLevel: 'conhessLevel'
             };
@@ -253,6 +254,7 @@ const AddStaff = () => {
                     formData.append('profilePicture', staff[key]);
                 } else if (staff[key] && fieldMapping[key]) {
                     formData.append(fieldMapping[key], staff[key]);
+                    console.log(`Adding ${fieldMapping[key]}: ${staff[key]}`);
                 }
             });
     
@@ -282,6 +284,7 @@ const AddStaff = () => {
                     localGovernment: '',
                     salaryGrade: '',
                     gender: '',
+                    staffstep: '',
                     conhessLevel: '',
                     profilePicture: null
                 });
@@ -465,6 +468,7 @@ const AddStaff = () => {
                                     setStaff(prev => ({
                                         ...prev,
                                         salaryGrade: `CONHESS ${selectedLevel}/${e.target.value}`,
+                                        staffstep: e.target.value
                                     }));
                                 }}
                                 className={`w-full p-2 border ${errors.salaryGrade ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
