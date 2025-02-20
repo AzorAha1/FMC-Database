@@ -9,7 +9,7 @@ const AddStaff = () => {
     const [selectedStep, setSelectedStep] = useState('');
     const staffLevels = {
         JSA: Array.from({ length: 6 }, (_, i) => i + 2), // CONHESS 1-6
-        SSA: Array.from({ length: 9 }, (_, i) => i + 7)  // CONHESS 7-15
+        SSA: Array.from({ length: 9 }, (_, i) => i + 7).filter(level => level !== 10) // CONHESS 7-15 excluding CONHESS 10
     };
 
     const steps = Array.from({ length: 15 }, (_, i) => i + 1); // Steps 1-15

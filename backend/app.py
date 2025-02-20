@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 from datetime import date, timedelta, datetime, timezone
+from apscheduler.schedulers.background import BackgroundScheduler
 from flask_cors import CORS
 from bson import json_util
 import os
@@ -100,9 +101,74 @@ def calculate_promotion_start_date(present_apt):
         return date(year_of_appointment + 1, 1, 1)
     return present_apt_date
 
-def yearlyStepincrease(staff):
+def calculate_yearly_Step_increase(current_level, current_step):
     """this function will have a yearly step increase for every permanent staff"""
-    pass
+    #max step for each conhess level
+
+    max_steps = {
+        'CONHESS 2': 15,
+        'CONHESS 3': 15,
+        'CONHESS 4': 15,
+        'CONHESS 5': 15,
+        'CONHESS 6': 15,
+        'CONHESS 7': 15,
+        'CONHESS 8': 15,
+        'CONHESS 9': 15,
+        
+        'CONHESS 11': 11,
+        'CONHESS 12': 11,
+        'CONHESS 13': 9,
+        'CONHESS 14': 9,
+        'CONHESS 15': 9,
+    }
+    #get max step
+    max_step = max_steps.get(current_level)
+    #next step
+    next_step = min(int(current_step) + 1, max_step)
+
+    return str(next_step)
+
+def update_next_step():
+    current_time = datetime.utcnow()
+    try:
+        staff_cursor = mongo.db.permanent_staff.find({'is_active': True})
+        for staff in staff_cursor:
+            last_update = staff.get('last_step_update')
+            if not last_update or (current_time - last_update).days >= 365:
+                current_level = staff.get('conhessLevel')
+                current_step = staff.get('staffstep')
+                # calculate new step
+                new_step = calculate_yearly_Step_increase(current_level=current_level, current_step=current_step)
+                # update 
+                mongo.db.permanent_staff.update_one(
+                    {'_id': staff['_id']},
+                    {'$set': {
+                        'staffstep': new_step,
+                        'last_step_update': current_time,
+                        'staffsalgrade':f'{current_level}/{new_step}'
+                    }}
+                )
+                mongo.db.step_increment_logs.insert_one({
+                    'staff_id': staff['staff_id'],
+                    'previous_step': current_step,
+                    'new_step': new_step,
+                    'update_date': current_time,
+                    'level': current_level
+                })
+    except Exception as e:
+        print(f'Error updating new step: {e}')
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(
+    update_next_step,
+    'cron',
+    month='1',  # January
+    day='1',    # 1st day of month
+    hour='0',   # Midnight
+    minute='0'  # Midnight exactly
+)
+# Start the scheduler
+scheduler.start()
 
 def calculate_promotion_eligibility(present_apt, years_required):
     """Calculate promotion eligibility based on start date and required years"""
