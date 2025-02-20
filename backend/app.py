@@ -410,7 +410,7 @@ def add_staff():
             'staffpno': data['staffpno'],
             'staffippissNumber': data['staffippissNumber'],
             'staffrank': data['staffrank'],
-            'staffsalgrade': data['staffsalgrade'],
+            'staffsalgrade': f"{data['conhessLevel']}/{data['staffstep']}",
             'staffdateofpresentapt': staff_date_of_present_appointment.strftime('%Y-%m-%d'),
             'staffgender': data['staffgender'],
             'stafforigin': data['stafforigin'],

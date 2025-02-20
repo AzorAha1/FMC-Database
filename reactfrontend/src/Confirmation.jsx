@@ -15,7 +15,7 @@ const Confirmation = () => {
     const getStaffsfromendpoint = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`http://localhost:5003/api/confirmation?page=${page}&limit=10`);
+            const response = await axios.get(`/api/confirmation?page=${page}&limit=10`);
             console.log("Backend response:", response.data); // Log the response
             const staffWithFullUrls = response.data.data.map(staff => ({
                 ...staff,

@@ -7,12 +7,11 @@ const AuthContext = createContext(null);
 
 // AuthProvider component
 const AuthProvider = ({ children }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false); // Track authentication status
-    const [userRole, setUserRole] = useState(null); // Track user role
-    const [loading, setLoading] = useState(true); // Track loading state
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [userRole, setUserRole] = useState(null);
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
-    // Check authentication status on app load and after login
     const checkAuth = async () => {
         try {
             const response = await axios.get('/api/check-auth', { withCredentials: true });
@@ -29,16 +28,14 @@ const AuthProvider = ({ children }) => {
         }
     };
 
-    // Check authentication status on app load
     useEffect(() => {
         checkAuth();
     }, []);
 
-    // Login function
     const login = async (email, password, role) => {
         try {
             const response = await axios.post('/api/login', { email, password, role }, { withCredentials: true });
-            await checkAuth(); // Call checkAuth to sync state with backend
+            await checkAuth();
             return {
                 success: true,
                 redirectUrl: response.data.redirectUrl,
@@ -48,7 +45,6 @@ const AuthProvider = ({ children }) => {
         }
     };
 
-    // Logout function
     const logout = async () => {
         try {
             await axios.post('/api/logout', {}, { withCredentials: true });
@@ -61,28 +57,24 @@ const AuthProvider = ({ children }) => {
         }
     };
 
-    // Check if the user is an admin
     const isAdmin = () => userRole === 'admin-user';
 
-    // Provide authentication context to the app
     return (
-        <AuthContext.Provider
-            value={{
-                isAuthenticated,
-                userRole,
-                loading,
-                login,
-                logout,
-                isAdmin,
+        <AuthContext.Provider 
+            value={{ 
+                isAuthenticated, 
+                userRole, 
+                login, 
+                logout, 
+                isAdmin, 
+                loading 
             }}
         >
-            {children}
+            {!loading && children}
         </AuthContext.Provider>
     );
 };
 
-// Custom hook to use the AuthContext
 const useAuth = () => useContext(AuthContext);
 
-// Export AuthProvider and useAuth
 export { AuthProvider, useAuth };
