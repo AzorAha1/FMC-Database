@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 from datetime import date, timedelta, datetime, timezone
+from bson.errors import InvalidId
+from werkzeug.security import generate_password_hash
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask_cors import CORS
 from bson import json_util
@@ -181,17 +183,29 @@ def get_conhess_level(conhess_str):
         return int(conhess_str.split(' ')[-1])
     except (ValueError, IndexError):
         return 0
-
 def calculate_promotion(staff_data):
     """Calculate promotion eligibility date based on staff type and level"""
     try:
         # check if staff is confirmed
         if staff_data.get('confirmation_status') != 'confirmed':
             return None
-        present_apt = datetime.strptime(staff_data['staffdateofpresentapt'], '%Y-%m-%d')
-        staff_type = staff_data['stafftype']
-        conhess_level = get_conhess_level(staff_data['conhessLevel'])
+            
+        # Check if staffdateofpresentapt exists and is not None
+        present_apt_date = staff_data.get('staffdateofpresentapt')
+        if not present_apt_date:
+            print(f"Warning: No present appointment date for staff {staff_data.get('_id')}")
+            return None
+            
+        # Now safely parse the date
+        present_apt = datetime.strptime(present_apt_date, '%Y-%m-%d')
         
+        # Get staff type and level with safe dict access
+        staff_type = staff_data.get('stafftype')
+        conhess_level = get_conhess_level(staff_data.get('conhessLevel', ''))
+        
+        if not staff_type:  # Check if staff type exists
+            return None
+            
         if staff_type == 'JSA':
             return calculate_promotion_eligibility(present_apt, 2)  # 2 years for junior staff
         elif staff_type == 'SSA':
@@ -200,7 +214,8 @@ def calculate_promotion(staff_data):
             else:
                 return calculate_promotion_eligibility(present_apt, 4)  # 4 years for senior management
         return None
-    except (ValueError, KeyError):
+    except (ValueError, KeyError) as e:
+        print(f"Error calculating promotion for staff {staff_data.get('_id')}: {str(e)}")
         return None
 
 
@@ -559,7 +574,6 @@ def add_staff():
             'success': False,
             'message': f'An unexpected error occurred: {str(e)}'
         }), 500
-
 #new endpoint to edit and delete staff
 @app.route('/api/manage_staff/<string:staff_id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
@@ -623,7 +637,115 @@ def manage_staff(staff_id):
             return jsonify({'message': 'Staff deleted successfully'}), 200
         else:
             return jsonify({'message': 'Staff not found'}), 404
+@app.route('/api/userlist')
+@login_required
+@admin_required
+def get_users():
+    try:
+        # Add debug logging
+        print("Fetching users from database...")
+        users = list(mongo.db.user.find({}, {'password': 0}))  # Exclude password field
+        
+        # Convert ObjectId to string for frontend
+        for user in users:
+            user['_id'] = str(user['_id'])
+            # Ensure all required fields exist
+            user['username'] = user.get('username', '')
+            user['email'] = user.get('email', '')
+            user['department'] = user.get('department', '')
+            user['role'] = user.get('role', 'user')
+            user['staffphone'] = user.get('staffphone', '')
+            user['filenumber'] = user.get('filenumber', '')
+            
+        return jsonify(users), 200
+    except Exception as e:
+        print(f"Error in get_users: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
+@app.route('/api/manage_users/<string:user_id>', methods=['GET', 'PUT', 'DELETE'])
+@login_required
+@admin_required
+def manage_users(user_id):
+    try:
+        print(f"Received user_id: {user_id}")
+        user_id_obj = ObjectId(user_id)
+        
+        # Check session
+        userbysession = session.get('email')
+        if not userbysession:
+            return jsonify({'message': 'User session not found'}), 401
+            
+        # Fetch current user
+        current_user = mongo.db.user.find_one({'email': userbysession})
+        if not current_user:
+            return jsonify({'message': 'Session user not found'}), 404
+            
+        # Fetch target user
+        user = mongo.db.user.find_one({'_id': user_id_obj})
+        if not user:
+            return jsonify({'message': 'User not found'}), 404
+            
+        if request.method == 'PUT':
+            data = request.get_json()
+            print(f"Update data received: {data}")
+            
+            # Create update dictionary only with fields that are present
+            update_fields = {}
+            field_mappings = {
+                'username': 'username',
+                'email': 'email',
+                'department': 'department',
+                'role': 'role',
+                'staffphone': 'staffphone',
+                'filenumber': 'filenumber'
+            }
+            
+            for frontend_field, db_field in field_mappings.items():
+                if frontend_field in data:
+                    update_fields[db_field] = data[frontend_field]
+                    
+            # Handle password separately
+            if data.get('password'):
+                # Hash the new password using bcrypt
+                hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
+                update_fields['password'] = hashed_password
+                
+            if not update_fields:
+                return jsonify({'message': 'No valid fields to update'}), 400
+            # Update database
+            result = mongo.db.user.update_one(
+                {'_id': user_id_obj},
+                {'$set': update_fields}
+            )
+            
+            if result.modified_count > 0:
+                log_reports(
+                    action='edit',
+                    staff_id=str(user_id_obj),
+                    details=f'User updated by {current_user.get("username")}'
+                )
+                return jsonify({'message': 'User updated successfully'}), 200
+            else:
+                return jsonify({'message': 'No changes detected'}), 200
+                
+        elif request.method == 'DELETE':
+            result = mongo.db.user.delete_one({'_id': user_id_obj})
+            if result.deleted_count > 0:
+                log_reports(
+                    action='delete',
+                    staff_id=str(user_id_obj),
+                    details=f'User deleted by {current_user.get("username")}'
+                )
+                return jsonify({'message': 'User deleted successfully'}), 200
+            else:
+                return jsonify({'message': 'User not found'}), 404
+                
+    except InvalidId:
+        print(f"Invalid ObjectId format: {user_id}")
+        return jsonify({'message': 'Invalid user ID format'}), 400
+    except Exception as e:
+        print(f"Error in manage_users: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 # manage lcm staff by edit and delete
 @app.route('/api/manage_lcm_staff/<string:lcmstaff_id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
@@ -966,6 +1088,7 @@ def eligible_promotions():
 # promote staff 
 @app.route('/api/promote-staff', methods=['POST'])
 @login_required
+@admin_required
 def promote_staff():
     try:
         staff_id = request.json.get('staffId')

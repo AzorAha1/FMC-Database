@@ -2,16 +2,16 @@ import React, { useState, useEffect } from 'react';
 import axios from './api/axios.js';
 import { Users, Trash2, PencilIcon, Search } from 'lucide-react';
 import Sidebar from './Sidebar.jsx';
+import EditUser from './EditUser';
+
 const UserList = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
-
-    useEffect(() => {
-        fetchUsers();
-    }, []);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
 
     const fetchUsers = async () => {
         try {
@@ -23,6 +23,41 @@ const UserList = () => {
             setLoading(false);
         }
     };
+    useEffect(() => {
+        fetchUsers();
+      }, []);
+
+    const handleEdit = (userId) => {
+        const userToEdit = users.find(user => user._id === userId);
+        setSelectedUser(userToEdit);
+        setIsEditModalOpen(true);
+    };
+    const handleDelete = async (userId) => {
+        if (window.confirm('Are you sure you want to delete this user?')) {
+            try {
+                await axios.delete(`/api/manage_users/${userId}`);
+                // Instead of filtering out the user, re-fetch the user list to ensure data consistency
+                fetchUsers();
+            } catch (error) {
+                setError('Failed to delete user');
+            }
+        }
+    };
+    
+
+    const handleSaveEdit = async (updatedData) => {
+        try {
+            const userId = selectedUser._id.toString();
+            await axios.put(`/api/manage_users/${userId}`, updatedData);
+            setUsers(users.map(user => 
+                user._id === userId ? { ...user, ...updatedData } : user
+            ));
+            setIsEditModalOpen(false);
+        } catch (error) {
+            console.error('Update error:', error.response?.data);
+        }
+    };
+    
 
     const handleSearch = (event) => {
         setSearchTerm(event.target.value);
@@ -136,8 +171,8 @@ const UserList = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                                ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 
-                                                  user.role === 'super_admin' ? 'bg-red-100 text-red-800' : 
+                                                ${user.role === 'admin-user' ? 'bg-purple-100 text-purple-800' : 
+
                                                   'bg-green-100 text-green-800'}`}>
                                                 {user.role}
                                             </span>
@@ -162,6 +197,13 @@ const UserList = () => {
                         </table>
                     </div>
                 </div>
+
+                <EditUser 
+                    user={selectedUser}
+                    isOpen={isEditModalOpen}
+                    onClose={() => setIsEditModalOpen(false)}
+                    onSave={handleSaveEdit}
+                />
             </div>
         </div>
     );

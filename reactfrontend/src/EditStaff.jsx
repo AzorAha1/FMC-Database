@@ -6,14 +6,14 @@ const EditStaff = ({staff, isOpen, onClose, onSave}) => {
         firstName: staff?.firstName || '',
         midName: staff?.midName || '',
         lastName: staff?.lastName || '',
-        dob: staff?.dob || '',
+        // dob: staff?.dob || '',
         fileNumber: staff?.fileNumber || '',
         department: staff?.department || '',
         phone: staff?.phone || '',
         staffippissNumber: staff?.staffippissNumber || '',
         staffrank: staff?.staffrank || '',
         staffsalgrade: staff?.staffsalgrade || '',
-        staffdateofpresentapt: staff?.staffdateofpresentapt || '',
+        // staffdateofpresentapt: staff?.staffdateofpresentapt || '',
         staffgender: staff?.staffgender || '',
         stafforigin: staff?.stafforigin || '',
         localgovorigin: staff?.localgovorigin || '',
@@ -26,14 +26,14 @@ const EditStaff = ({staff, isOpen, onClose, onSave}) => {
             firstName: staff?.firstName || '',
             midName: staff?.midName || '',
             lastName: staff?.lastName || '',
-            dob: staff?.dob || '',
+            // dob: staff?.dob || '',
             fileNumber: staff?.fileNumber || '',
             department: staff?.department || '',
             phone: staff?.phone || '',
             staffippissNumber: staff?.staffippissNumber || '',
             staffrank: staff?.staffrank || '',
             staffsalgrade: staff?.staffsalgrade || '',
-            staffdateofpresentapt: staff?.staffdateofpresentapt || '',
+            // staffdateofpresentapt: staff?.staffdateofpresentapt || '',
             staffgender: staff?.staffgender || '',
             stafforigin: staff?.stafforigin || '',
             localgovorigin: staff?.localgovorigin || '',
@@ -95,6 +95,7 @@ const EditStaff = ({staff, isOpen, onClose, onSave}) => {
                                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
                                 />
                             </div>
+                            {/*
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
                                 <input
@@ -105,6 +106,7 @@ const EditStaff = ({staff, isOpen, onClose, onSave}) => {
                                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
                                 />
                             </div>
+                            */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">File Number</label>
                                 <input
@@ -165,6 +167,7 @@ const EditStaff = ({staff, isOpen, onClose, onSave}) => {
                                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
                                 />
                             </div>
+                            {/*
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Date of Present Appointment</label>
                                 <input
@@ -175,6 +178,7 @@ const EditStaff = ({staff, isOpen, onClose, onSave}) => {
                                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
                                 />
                             </div>
+                            */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Gender</label>
                                 <select
